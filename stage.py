@@ -2,27 +2,30 @@
 
 from PIL import Image
 import random
+import math
 
 
 class Map:
     
-    def __init__(self, width, height):
+    def __init__(self, width, height, resolution):
         '''
         Initialize the map.
         Inputs:
-            width: The width of the map in pixels.
-            height: The height of the map in pixels.
+            width: The width of the map in meters.
+            height: The height of the map in meters.
+            resolution: The size of a pixel in meters.
         '''
         
-        self.width = width
-        self.height = height
-        self.floor = [255 for i in range(width*height)]
+        self.resolution = resolution
+        self.width = int(math.ceil(width / resolution)) + 1
+        self.height = int(math.ceil(height / resolution)) + 1
+        self.floor = [255 for i in range(self.width * self.height)]
         self.obstacles = []
     
     
     def get_pixel(self, x, y):
         '''
-        Get a pixel on the floor.
+        Get the value of a pixel on the floor.
         Inputs:
             x: The x-coordinate of the pixel.
             y: The y-coordinate of the pixel.
@@ -58,6 +61,21 @@ class Map:
         return self.get_pixel(x, y) == 255
     
     
+    def get_coordinate(self, x_coor, y_coor):
+        '''
+        Get the colour of a coordinate in meters.
+        Inputs:
+            x: The x-coordinate in meters.
+            y: The y-coordinate in meters.
+        Output:
+            The value of the colour at the given location.
+        '''
+        
+        x = int(round(x_coor / self.resolution))
+        y = self.height - int(round(y_coor / self.resolution)) - 1
+        return self.get_pixel(x, y)
+    
+    
     def fill_floor(self, num_areas, num_colours):
         '''
         Draw the colours on the floor of the map.
@@ -68,7 +86,7 @@ class Map:
         
         # Calculate the boundaries and distances between the different
         # possible colours.
-        min_colour = 100
+        min_colour = 120
         max_colour = 200
         mult = (max_colour - min_colour) / (num_colours-1)
         
