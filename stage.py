@@ -16,6 +16,7 @@ class Map:
         self.width = width
         self.height = height
         self.floor = [255 for i in range(width*height)]
+        self.obstacles = []
     
     
     def get_pixel(self, x, y):
@@ -79,8 +80,8 @@ class Map:
         # Fill this list with the random locations of the seeds.
         todo = []
         for i in range(num_areas):
-            x = random.randint(0, self.width)
-            y = random.randint(0, self.height)
+            x = random.randint(0, self.width-1)
+            y = random.randint(0, self.height-1)
             todo.append((x, y, colours[i]))
         
         # Keep going untill the entire floor is painted.
@@ -108,9 +109,12 @@ class Map:
         Inputs:
             num: The number of obstacles to place.
         '''
-    
         
-        pass
+        for i in range(num):
+            x = random.randint(1, self.width-2)
+            y = random.randint(1, self.height-2)
+            
+            self.obstacles.append((x, y))
     
     
     def draw_map(self, path):
@@ -123,4 +127,9 @@ class Map:
         
         im = Image.new('L', (self.width, self.height))
         im.putdata(self.floor)
+        for obstacle in self.obstacles:
+            x, y = obstacle
+            for i in range(-1, 2):
+                for j in range(-1, 2):
+                    im.putpixel((x+i, y+j), 0)
         im.save(path)
