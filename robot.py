@@ -26,12 +26,14 @@ class Robot:
         for i in range(self.num_particles):
             self.particles.append((
                 random.random() * 2*math.pi,
-                random.random() * mapp.width,
-                random.random() * mapp.height
+                (
+                    random.random() * mapp.width,
+                    random.random() * mapp.height
+                )
             ))
     
     
-    def put(self, ang, x, y):
+    def put(self, ang, coor):
         '''
         Put the robot on a place on the map.
         Inputs:
@@ -41,8 +43,7 @@ class Robot:
         '''
         
         self.ang = ang
-        self.x = x
-        self.y = y
+        self.coor = coor
     
     
     def intersects(self, position, wall):
@@ -65,15 +66,17 @@ class Robot:
         Inputs:
             u: A tuple of the form (angle, distance) describing the
                 desired movement.
-            state: A tuple of the form (angle, x_coordinate,
-                y_coordinate) describing the current state.
+            state: A tuple of the form (angle, (x_coordinate,
+                y_coordinate)) describing the current state.
         Output:
             A tuple of the form (angle, x_coordinate, y_coordinate).
         '''
         
         # If no state is given, use the current state of the robot.
         if not state:
-            state = (self.ang, self.x, self.y)
+            state = (self.ang, self.coor)
+        x = state[1][0]
+        y = state[1][1]
         
         # Calculate the angle and distance under which to move.
         ang = state[0] + random.gauss(u[0], self.a_sigma)
@@ -96,40 +99,74 @@ class Robot:
             # steps.
             step += 1
             position = (
-                state[1] + step * x_step,
-                state[2] + step * y_step
+                x + step * x_step,
+                y + step * y_step
             )
             
             # Check if the robot collides with any of the walls. If so,
             # make sure we exit the while-loop.
             for wall in self.mapp.walls:
                 if self.intersects(position, wall):
-                    print(wall)
                     intersect = True
                     step -= 1
                     break
         
         # Calculate the final position of the robot and return this.
-        x = state[1] + step * x_step
-        y = state[2] + step * y_step
+        x += step * x_step
+        y += step * y_step
         
-        return (ang, x, y)
+        return (ang, (x, y))
+    
+    
+    def measurement_model(self):
+        '''
+        TODO: not implemented yet.
+        '''
+        
+        return 1
     
     
     def move(self, ang, dist):
         '''
-        Move the robot. A rotation is executed first, and then a
-        translation.
+        Move the robot according to the motion model and update the
+        particles.
         Inputs:
             ang: The angle over which to rotate the robot.
             dist: The distance over which to move the robot.
         '''
         
-        # Use the motion model to calculate the next state.
-        self.ang, self.x, self.y = self.motion_model(
-            (ang, dist),
-            (self.ang, self.x, self.y)
-        )
+        u = (ang, dist)
+        
+        # Move the robot.
+        self.ang, self.coor = self.motion_model(u)
+        
+        # Initialize the temporary particle list with a dummy particle.
+        # Elements are of the form ((ang, (x, y)), weight)
+        temp = [((0, (0, 0)), 0)]
+        for particle in self.particles:
+            new_part = self.motion_model(u, particle)
+            weight = self.measurement_model()
+            
+            temp.append((new_part, temp[-1][1] + weight))
+        
+        # Remove the dummy particle and empty the particle list.
+        temp.pop(0)
+        self.particles = []
+        max_weight = temp[-1][1]
+        
+        # Add num_particles new particles to the list, according to the
+        # cumulative distribution stored in temp[i][1].
+        for i in range(self.num_particles):
+            selector = random.random() * max_weight
+            
+            # Find the largest temporary particle whose cumulative
+            # weight is smaller than the random selector.
+            k = 0
+            while temp[k][1] < selector:
+                k += 1
+            
+            # Add the found particle to the particle list.
+            self.particles.append(temp[k][0])
     
     
     def print(self):
