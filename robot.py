@@ -2,16 +2,37 @@
 
 import math
 import random
+import mapp
 
 class Robot:
     
     d_sigma = 0.05 # Uncertainty for distances.
     a_sigma = 0.05 # Uncertainty for angles.
-    num_particles = 100
     
-    def __init__(self, ang, x, y):
+    num_particles = 100
+    particles = []
+    
+    def __init__(self, mapp):
         '''
-        Initialize the robot.
+        Initialize the robot with a map.
+        Inputs:
+            mapp: a Map object on which the robot will move.
+        '''
+        
+        self.mapp = mapp
+        
+        # Draw num_particles random particles inside the map.
+        for i in range(self.num_particles):
+            self.particles.append((
+                random.random() * 2*math.pi,
+                random.random() * mapp.width,
+                random.random() * mapp.height
+            ))
+    
+    
+    def put(self, ang, x, y):
+        '''
+        Put the robot on a place on the map.
         Inputs:
             ang: The orientation of the robot in radians.
             x: The x-coordinate of the robot in meters.
@@ -21,9 +42,6 @@ class Robot:
         self.x = x
         self.y = y
         self.ang = ang
-        
-        # Initialize particles.
-        
     
     def motion_model(self, u, state):
         '''

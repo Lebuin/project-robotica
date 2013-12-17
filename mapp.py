@@ -7,6 +7,8 @@ import math
 
 class Map:
     
+    obstacles = []
+    
     def __init__(self, width, height, resolution):
         '''
         Initialize the map.
@@ -16,11 +18,13 @@ class Map:
             resolution: The size of a pixel in meters.
         '''
         
+        self.width = width
+        self.height = height
         self.resolution = resolution
-        self.width = int(math.ceil(width / resolution)) + 1
-        self.height = int(math.ceil(height / resolution)) + 1
-        self.floor = [255 for i in range(self.width * self.height)]
-        self.obstacles = []
+        
+        self.wpix = int(math.ceil(width / resolution)) + 1
+        self.hpix = int(math.ceil(height / resolution)) + 1
+        self.floor = [255 for i in range(self.wpix * self.hpix)]
     
     
     def get_pixel(self, x, y):
@@ -33,7 +37,7 @@ class Map:
             An integer in the range [0,255].
         '''
         
-        return self.floor[self.width*y + x]
+        return self.floor[self.wpix*y + x]
     
     
     def set_pixel(self, x, y, value):
@@ -45,7 +49,7 @@ class Map:
             value: An integer in the range [0,255].
         '''
         
-        self.floor[self.width*y + x] = value
+        self.floor[self.wpix*y + x] = value
     
     
     def is_empty(self, x, y):
@@ -72,7 +76,7 @@ class Map:
         '''
         
         x = int(round(x_coor / self.resolution))
-        y = self.height - int(round(y_coor / self.resolution)) - 1
+        y = self.hpix - int(round(y_coor / self.resolution)) - 1
         return self.get_pixel(x, y)
     
     
@@ -99,8 +103,8 @@ class Map:
         # Fill this list with the random locations of the seeds.
         todo = []
         for i in range(num_areas):
-            x = random.randint(0, self.width-1)
-            y = random.randint(0, self.height-1)
+            x = random.randint(0, self.wpix-1)
+            y = random.randint(0, self.hpix-1)
             todo.append((x, y, colours[i]))
         
         # Keep going untill the entire floor is painted.
@@ -116,8 +120,8 @@ class Map:
             # Add empty neighbouring pixels to the todo list. Give them
             # the same colour as the current pixel.
             for i,j in [(-1,0), (1,0), (0,-1), (0,1)]:
-                if x+i >= 0 and x+i < self.width and \
-                    y+j >= 0 and y+j < self.height and \
+                if x+i >= 0 and x+i < self.wpix and \
+                    y+j >= 0 and y+j < self.hpix and \
                     self.is_empty(x+i, y+j):
                         todo.append((x+i, y+j, colour))
     
@@ -130,8 +134,8 @@ class Map:
         '''
         
         for i in range(num):
-            x = random.randint(1, self.width-2)
-            y = random.randint(1, self.height-2)
+            x = random.randint(1, self.wpix-2)
+            y = random.randint(1, self.hpix-2)
             self.obstacles.append((x, y))"""
     
     def place_obstacles(self, num):
@@ -143,26 +147,26 @@ class Map:
         
         # Add walls around the map.
         self.obstacles.extend([
-            (0, 0, self.width-1, 0),
-            (self.width-1, 0, self.width-1, self.height-1),
-            (self.width-1, self.height-1, 0, self.height-1),
-            (0, self.height-1, 0, 0)
+            (0, 0, self.wpix-1, 0),
+            (self.wpix-1, 0, self.wpix-1, self.hpix-1),
+            (self.wpix-1, self.hpix-1, 0, self.hpix-1),
+            (0, self.hpix-1, 0, 0)
         ])
         
         for i in range(num):
             
-            x_start = random.randint(0, self.width-1)
-            y_start = random.randint(0, self.height-1)
+            x_start = random.randint(0, self.wpix-1)
+            y_start = random.randint(0, self.hpix-1)
             
-            size = (self.width + self.height) / 2
+            size = (self.wpix + self.hpix) / 2
             length = random.gauss(size / 2, size / 4)
             angle = random.random() * 2*math.pi
             x_end = min(
-                self.width-1,
+                self.wpix-1,
                 max(0, x_start + length * math.cos(angle))
             )
             y_end = min(
-                self.height-1,
+                self.hpix-1,
                 max(0, y_start + length * math.sin(angle))
             )
             
@@ -180,9 +184,9 @@ class Map:
                 # Check if the end point is inside the map.
                 test = (
                     x_end >= 0 and
-                    x_end < self.width and
+                    x_end < self.wpix and
                     y_end >= 0 and
-                    y_end < self.height
+                    y_end < self.hpix
                 )'''
             
             self.obstacles.append((x_start, y_start, x_end, y_end))
@@ -196,7 +200,7 @@ class Map:
                 by PIL.
         '''
         
-        im = Image.new('L', (self.width, self.height))
+        im = Image.new('L', (self.wpix, self.hpix))
         
         # Draw the floor.
         im.putdata(self.floor)
