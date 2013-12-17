@@ -7,7 +7,7 @@ import math
 
 class Map:
     
-    obstacles = []
+    walls = []
     
     def __init__(self, width, height, resolution):
         '''
@@ -27,57 +27,66 @@ class Map:
         self.floor = [255 for i in range(self.wpix * self.hpix)]
     
     
-    def get_pixel(self, x, y):
+    def get_pixel(self, coor):
         '''
         Get the value of a pixel on the floor.
         Inputs:
-            x: The x-coordinate of the pixel.
-            y: The y-coordinate of the pixel.
+            coor: A tuple (x, y).
         Output:
             An integer in the range [0,255].
         '''
         
-        return self.floor[self.wpix*y + x]
+        return self.floor[self.wpix*coor[1] + coor[0]]
     
     
-    def set_pixel(self, x, y, value):
+    def set_pixel(self, coor, value):
         '''
         Set a pixel on the floor.
         Inputs:
-            x: The x-coordinate of the pixel.
-            y: The y-coordinate of the pixel.
+            coor: A tuple (x, y).
             value: An integer in the range [0,255].
         '''
         
-        self.floor[self.wpix*y + x] = value
+        self.floor[self.wpix*coor[1] + coor[0]] = value
     
     
-    def is_empty(self, x, y):
+    def is_empty(self, coor):
         '''
         Check if a pixel has been coloured.
         Inputs:
-            x: The x-coordinate of the pixel.
-            y: The y-coordinate of the pixel.
+            coor: A tuple (x, y).
         Output:
             True if the pixel is empty, False otherwise.
         '''
         
-        return self.get_pixel(x, y) == 255
+        return self.get_pixel(coor) == 255
     
     
-    def get_coordinate(self, x_coor, y_coor):
+    def meter_to_pixel(self, coor):
+        '''
+        Convert a coordinate in meters to a pixel coordinate.
+        Inputs:
+            coor: A tuple (x, y).
+        Output:
+            A tuple (x, y).
+        '''
+        
+        x = int(round(coor[0] / self.resolution))
+        y = self.hpix - int(round(coor[1]/self.resolution)) - 1
+        return (x, y)
+    
+    
+    
+    def get_coordinate(self, coor):
         '''
         Get the colour of a coordinate in meters.
         Inputs:
-            x: The x-coordinate in meters.
-            y: The y-coordinate in meters.
+            coor: A tuple (x, y)
         Output:
             The value of the colour at the given location.
         '''
         
-        x = int(round(x_coor / self.resolution))
-        y = self.hpix - int(round(y_coor / self.resolution)) - 1
-        return self.get_pixel(x, y)
+        return self.get_pixel(meter_to_pixel(coor))
     
     
     def fill_floor(self, num_areas, num_colours):
@@ -105,91 +114,64 @@ class Map:
         for i in range(num_areas):
             x = random.randint(0, self.wpix-1)
             y = random.randint(0, self.hpix-1)
-            todo.append((x, y, colours[i]))
+            todo.append(((x, y), colours[i]))
         
         # Keep going untill the entire floor is painted.
         while len(todo):
             
             # Get a random pixel from the todo list.
-            x, y, colour = todo.pop(random.randint(0, len(todo)-1))
+            coor, colour = todo.pop(random.randint(0, len(todo)-1))
             
             # Put this pixel on the floor if it is empty.
-            if self.is_empty(x, y):
-                self.set_pixel(x, y, colour)
+            if self.is_empty(coor):
+                self.set_pixel(coor, colour)
             
             # Add empty neighbouring pixels to the todo list. Give them
             # the same colour as the current pixel.
             for i,j in [(-1,0), (1,0), (0,-1), (0,1)]:
                 if x+i >= 0 and x+i < self.wpix and \
                     y+j >= 0 and y+j < self.hpix and \
-                    self.is_empty(x+i, y+j):
-                        todo.append((x+i, y+j, colour))
+                    self.is_empty((coor[0]+i, coor[1]+j)):
+                        todo.append((coor, colour))
     
-        
-    """def place_obstacles(self, num):
-        '''
-        Put obstacles on the map.
-        Inputs:
-            num: The number of obstacles to place.
-        '''
-        
-        for i in range(num):
-            x = random.randint(1, self.wpix-2)
-            y = random.randint(1, self.hpix-2)
-            self.obstacles.append((x, y))"""
     
-    def place_obstacles(self, num):
+    def place_walls(self, num):
         '''
-        Put obstacles on the map.
+        Put walls on the map.
         Inputs:
-            num: The number of obstacles to place.
+            num: The number of walls to place.
         '''
         
         # Add walls around the map.
-        self.obstacles.extend([
-            (0, 0, self.wpix-1, 0),
-            (self.wpix-1, 0, self.wpix-1, self.hpix-1),
-            (self.wpix-1, self.hpix-1, 0, self.hpix-1),
-            (0, self.hpix-1, 0, 0)
+        self.walls.extend([
+            ((0, 0), (self.width, 0)),
+            ((self.width, 0), (self.width, self.height)),
+            ((self.width, self.height), (0, self.height)),
+            ((0, self.height), (0, 0))
         ])
         
+        # Put num extra walls on the map.
         for i in range(num):
             
-            x_start = random.randint(0, self.wpix-1)
-            y_start = random.randint(0, self.hpix-1)
+            # Calculate a random begin point for the wall.
+            x_start = random.random() * self.width
+            y_start = random.random() * self.height
             
-            size = (self.wpix + self.hpix) / 2
+            # Calculate an end point, making sure it is in the map.
+            size = (self.width + self.height) / 2
             length = random.gauss(size / 2, size / 4)
             angle = random.random() * 2*math.pi
             x_end = min(
-                self.wpix-1,
+                self.width,
                 max(0, x_start + length * math.cos(angle))
             )
             y_end = min(
-                self.hpix-1,
+                self.height,
                 max(0, y_start + length * math.sin(angle))
             )
             
-            
-            '''test = False
-            
-            while not test:
-                
-                # Calculate random end points for the line.
-                length = random.gauss(size / 2, size / 4)
-                angle = random.random() * 2*math.pi
-                x_end = x_start + length * math.cos(angle)
-                y_end = y_start + length * math.sin(angle)
-                
-                # Check if the end point is inside the map.
-                test = (
-                    x_end >= 0 and
-                    x_end < self.wpix and
-                    y_end >= 0 and
-                    y_end < self.hpix
-                )'''
-            
-            self.obstacles.append((x_start, y_start, x_end, y_end))
+            # Add the wall to the list of walls.
+            self.walls.append(((x_start, y_start), (x_end, y_end)))
     
     
     def draw_map(self, path):
@@ -205,13 +187,13 @@ class Map:
         # Draw the floor.
         im.putdata(self.floor)
         
-        # Draw the obstacles as lines.
+        # Draw the walls as lines.
         draw = ImageDraw.Draw(im)
-        for obstacle in self.obstacles:
-            '''x, y = obstacle
-            for i in range(-1, 2):
-                for j in range(-1, 2):
-                    im.putpixel((x+i, y+j), 0)'''
-            draw.line(obstacle, fill=0)
+        for wall in self.walls:
+            w = (
+                self.meter_to_pixel(wall[0]),
+                self.meter_to_pixel(wall[1])
+            )
+            draw.line(w, fill=0)
         
         im.save(path)
