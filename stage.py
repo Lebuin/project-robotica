@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from PIL import Image
+from PIL import Image, ImageDraw
 import random
 import math
 
@@ -122,7 +122,7 @@ class Map:
                         todo.append((x+i, y+j, colour))
     
         
-    def place_obstacles(self, num):
+    """def place_obstacles(self, num):
         '''
         Put obstacles on the map.
         Inputs:
@@ -132,7 +132,60 @@ class Map:
         for i in range(num):
             x = random.randint(1, self.width-2)
             y = random.randint(1, self.height-2)
-            self.obstacles.append((x, y))
+            self.obstacles.append((x, y))"""
+    
+    def place_obstacles(self, num):
+        '''
+        Put obstacles on the map.
+        Inputs:
+            num: The number of obstacles to place.
+        '''
+        
+        # Add walls around the map.
+        self.obstacles.extend([
+            (0, 0, self.width-1, 0),
+            (self.width-1, 0, self.width-1, self.height-1),
+            (self.width-1, self.height-1, 0, self.height-1),
+            (0, self.height-1, 0, 0)
+        ])
+        
+        for i in range(num):
+            
+            x_start = random.randint(0, self.width-1)
+            y_start = random.randint(0, self.height-1)
+            
+            size = (self.width + self.height) / 2
+            length = random.gauss(size / 2, size / 4)
+            angle = random.random() * 2*math.pi
+            x_end = min(
+                self.width-1,
+                max(0, x_start + length * math.cos(angle))
+            )
+            y_end = min(
+                self.height-1,
+                max(0, y_start + length * math.sin(angle))
+            )
+            
+            
+            '''test = False
+            
+            while not test:
+                
+                # Calculate random end points for the line.
+                length = random.gauss(size / 2, size / 4)
+                angle = random.random() * 2*math.pi
+                x_end = x_start + length * math.cos(angle)
+                y_end = y_start + length * math.sin(angle)
+                
+                # Check if the end point is inside the map.
+                test = (
+                    x_end >= 0 and
+                    x_end < self.width and
+                    y_end >= 0 and
+                    y_end < self.height
+                )'''
+            
+            self.obstacles.append((x_start, y_start, x_end, y_end))
     
     
     def draw_map(self, path):
@@ -148,11 +201,13 @@ class Map:
         # Draw the floor.
         im.putdata(self.floor)
         
-        # Draw the obstacles as black 3x3 squares.
+        # Draw the obstacles as lines.
+        draw = ImageDraw.Draw(im)
         for obstacle in self.obstacles:
-            x, y = obstacle
+            '''x, y = obstacle
             for i in range(-1, 2):
                 for j in range(-1, 2):
-                    im.putpixel((x+i, y+j), 0)
+                    im.putpixel((x+i, y+j), 0)'''
+            draw.line(obstacle, fill=0)
         
         im.save(path)
