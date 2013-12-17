@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 
 import math
+import random
 
 class Robot:
     
-    self.d_sigma = 0.05 # Uncertainty for distances.
-    self.a_sigma = math.degrees(0.05) # Uncertainty for angles.
+    d_sigma = 0.05 # Uncertainty for distances.
+    a_sigma = 0.05 # Uncertainty for angles.
     
-    def __init__(self, x, y, ang):
+    def __init__(self, ang, x, y):
         '''
         Initialize the robot.
         Inputs:
-            x: The x-coordinate of the robot.
-            y: the y-coordinate of the robot.
-            ang: The orientation of the robot in degrees.
+            ang: The orientation of the robot in radians.
+            x: The x-coordinate of the robot in meters.
+            y: the y-coordinate of the robot in meters.
         '''
         
         self.x = x
@@ -21,18 +22,40 @@ class Robot:
         self.ang = ang
     
     
-    def move(self, dist, ang):
+    def move(self, ang, dist):
         '''
-        Move the robot.
+        Move the robot. A rotation is executed first, and then a
+        translation.
         Inputs:
+            ang: The angle over which to rotate the robot.
             dist: The distance over which to move the robot.
-            ang: The angle in degrees over which to rotate.
         '''
         
+        # Rotate the robot with gaussian distribution.
         self.ang += random.gauss(ang, self.a_sigma)
         
-        x_move = dist * math.degrees(math.cos(self.ang))
-        self.x += random.gauss(x_move, self.d_sigma)
+        # Move the robot.
+        move = random.gauss(dist, self.d_sigma * dist)
+        self.x += move * math.cos(self.ang)
+        self.y += move * math.sin(self.ang)
         
-        y_move = dist * math.degrees(math.sin(self.ang))
-        self.y += random.gauss(y_move, self.d_sigma)
+    
+    
+    def print(self):
+        '''
+        Print info on the location of the robot.
+        '''
+        
+        print('angle: ' + str(round(self.ang, 2)) +
+            ', coordinates: ('+str(round(self.x, 2)) +
+            ', ' + str(round(self.y, 2)) + ')')
+
+
+class Robot1(Robot):
+    
+    pass
+
+
+class Robot2(Robot):
+    
+    pass
