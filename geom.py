@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import math
+
 def dist_point_line(p0, l):
     """
     Calculate the distance between a point and a line segment.

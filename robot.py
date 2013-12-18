@@ -243,8 +243,8 @@ class Robot1(Robot):
                 ))
             if neg_dist > -self.max_range:
                 measurements.append((
-                    -theta,
-                    random.gauss(pos_dist, self.d_sigma * pos_dist)
+                    theta - math.pi,
+                    random.gauss(-neg_dist, self.d_sigma * pos_dist)
                 ))
             
         return measurements
@@ -274,20 +274,20 @@ class Robot1(Robot):
         sqrt2pi = math.sqrt(2*math.pi)
         
         for meas in measurements:
-            x = coor[0] + meas[1] * cos(ang + meas[0])
-            y = coor[1] + meas[1] * sin(ang + meas[0])
+            x = coor[0] + meas[1] * math.cos(ang + meas[0])
+            y = coor[1] + meas[1] * math.sin(ang + meas[0])
             
             min_d = float('inf')
-            for wall in walls:
-                d = dist_point_line((x, y), wall)
+            for wall in self.mapp.walls:
+                d = geom.dist_point_line((x, y), wall)
                 if d < min_d:
                     min_d = d
             
             # Multiply the total measurement probability by the 
             # probability of this measurement, using a Gauss function
             # with mean 0 and std dev hit_sigma * distance.
-            sigma = hit_sigma * meas[1]
-            prob *= math.exp(-d**2 / (2*sigma**2)) / (sigma*sqrt2pi)
+            sigma = self.hit_sigma * meas[1]
+            prob *= math.exp(-min_d**2 / (2*sigma**2)) / (sigma*sqrt2pi)
             
         return prob
 
