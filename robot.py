@@ -251,7 +251,7 @@ class Robot1(Robot):
     
     def measurement_model(self, measurements, state=None):
         '''
-        Calculate the probability of a range scan for a certain robot
+        Calculate the probability of a given range scan for a robot
         location.
         Inputs:
             measurements: An array of measurements, as returned by
@@ -278,19 +278,13 @@ class Robot1(Robot):
         for meas in measurements:
             x = coor[0] + meas[1] * math.cos(ang + meas[0])
             y = coor[1] + meas[1] * math.sin(ang + meas[0])
-            
-            # Find the distance to the closest wall.
-            min_d = float('inf')
-            for wall in self.mapp.walls:
-                d = geom.dist_point_line((x, y), wall)
-                if d < min_d:
-                    min_d = d
+            d = self.mapp.closest_wall((x, y))
             
             # Multiply the total measurement probability by the 
             # probability of this measurement, using a Gauss function
             # with mean 0 and std dev hit_sigma * distance.
             sigma = self.hit_sigma * meas[1]
-            prob *= math.exp(-min_d**2 / (2*sigma**2)) / (sigma*sqrt2pi)
+            prob *= math.exp(-d**2 / (2*sigma**2)) / (sigma*sqrt2pi)
             
         return prob
 

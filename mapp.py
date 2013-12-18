@@ -4,6 +4,7 @@ from PIL import Image, ImageDraw
 import random
 import math
 
+import geom
 
 class Map:
     
@@ -80,7 +81,23 @@ class Map:
             The value of the colour at the given location.
         """
         
-        return self.get_pixel(meter_to_pixel(coor))
+        return self.get_pixel(self.meter_to_pixel(coor))
+    
+    def closest_wall(self, coor):
+        """
+        Calculate the distance to the closest wall in meters.
+        Inputs:
+            coor: A tuple (x, y).
+        Output:
+            The distance to the closest wall.
+        """
+        min_d = float('inf')
+        for wall in self.walls:
+            d = geom.dist_point_line(coor, wall)
+            if d < min_d:
+                min_d = d
+        
+        return min_d
     
     def fill_floor(self, num_areas, num_colours):
         """
