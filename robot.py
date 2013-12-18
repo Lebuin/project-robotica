@@ -15,7 +15,7 @@ class Robot:
     ang = 0
     coor = (0, 0)
     
-    num_particles = 100
+    num_particles = 1000
     particles = []
     
     def __init__(self, mapp):

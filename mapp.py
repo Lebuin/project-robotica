@@ -211,8 +211,8 @@ class Map:
                     max_value = pixels[p]
             
             for p in pixels:
-                value = int(255 * (1 - pixels[p] / max_value))
-                draw.point(p, fill=(value, 255, value))
+                value = int(255 * pixels[p] / max_value)
+                draw.point(p, fill=(1 - value, 255, value))
         
         # Draw the robot as a red 3x3 square.
         if robot is not None:

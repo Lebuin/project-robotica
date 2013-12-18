@@ -34,7 +34,8 @@ r1.put(ang, (x, y))
 r2.put(ang, (x, y))
 
 # Move the robots around.
-r2.draw().save('test1.png')
-for i in range(1):
+r2.draw().save('move-r2/0.png')
+for i in range(50):
+    print(i)
     r2.move(random.random() * 2*math.pi, 1)
-    r2.draw().save('test2.png')
+    r2.draw().save('move-r2/test'+str(i+1)+'.png')
