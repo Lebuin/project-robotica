@@ -271,12 +271,15 @@ class Robot1(Robot):
             coor = state[1]
         
         prob = 1
-        sqrt2pi = math.sqrt(2*math.pi)
+        sqrt2pi = math.sqrt(2*math.pi)  # Repeatedly used constant
         
+        # Calculate the probability of each measurement and multiply
+        # them in prob.
         for meas in measurements:
             x = coor[0] + meas[1] * math.cos(ang + meas[0])
             y = coor[1] + meas[1] * math.sin(ang + meas[0])
             
+            # Find the distance to the closest wall.
             min_d = float('inf')
             for wall in self.mapp.walls:
                 d = geom.dist_point_line((x, y), wall)
@@ -294,4 +297,25 @@ class Robot1(Robot):
 
 class Robot2(Robot):
     
-    pass
+    def measure(self, state=None):
+        
+        # If no state is given, use the current state of the robot.
+        if state is None:
+            coor = self.coor
+        else:
+            coor = state[1]
+        
+        return self.mapp.get_coordinate(coor)
+    
+    def measurement_model(self, measurement, state=None):
+        
+        # If no state is given, use the current state of the robot.
+        if state is None:
+            coor = self.coor
+        else:
+            coor = state[1]
+        
+        if self.mapp.get_coordinate(coor) == measurement:
+            return 1
+        else:
+            return 0
