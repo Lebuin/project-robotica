@@ -9,14 +9,14 @@ import robot
 
 # Load a map, or draw one.
 width = 30
-height = 30
-resolution = 0.2
+height = 10
+resolution = 0.1
 
 num_areas = 100
 num_colours = 10
-num_walls = 0
+num_walls = 5
 
-num_particles = 1000
+num_particles = 200
 
 path = 'map.db'
 
@@ -44,8 +44,8 @@ r1.put(ang, (x, y))
 r2.put(ang, (x, y))
 
 # Move the robots around.
-r2.draw().save('move-r2/0.png')
+r1.draw().save('move-r1/test0.png')
 for i in range(1000):
     print(i)
-    r2.move(random.gauss(0, 0.5), 1)
-    r2.draw().save('move-r2/test'+str(i+1)+'.png')
+    r1.move(random.gauss(0, 1), 1)
+    r1.draw().save('move-r1/test'+str(i+1)+'.png')

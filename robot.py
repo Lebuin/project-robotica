@@ -294,7 +294,7 @@ class Robot1(Robot):
         
         # Calculate the probability of each measurement and multiply
         # them in prob.
-        for meas in measurements:
+        for meas in self.measurement:
             x = coor[0] + meas[1] * math.cos(ang + meas[0])
             y = coor[1] + meas[1] * math.sin(ang + meas[0])
             d = self.mapp.closest_wall((x, y))
@@ -306,6 +306,12 @@ class Robot1(Robot):
             prob *= math.exp(-d**2 / (2*sigma**2)) / (sigma*sqrt2pi)
             
         return prob
+    
+    def random_particle(self):
+        x = random.random() * self.mapp.width
+        y = random.random() * self.mapp.height
+        ang = random.random() * 2*math.pi
+        return (ang, (x, y))
 
 
 class Robot2(Robot):
@@ -348,7 +354,7 @@ class Robot2(Robot):
         else:
             return 0.1
     
-    def random_particle(self):
+    """def random_particle(self):
         # Choose a particle only when the colour of the floor under it
         # is right.
         while True:
@@ -356,4 +362,10 @@ class Robot2(Robot):
             y = random.random() * self.mapp.height
             if self.mapp.get_coordinate((x, y)) == self.measurement:
                 ang = random.random() * 2*math.pi
-                return (ang, (x, y))
+                return (ang, (x, y))"""
+    def random_particle(self):
+        x = random.random() * self.mapp.width
+        y = random.random() * self.mapp.height
+        ang = random.random() * 2*math.pi
+        return (ang, (x, y))
+        

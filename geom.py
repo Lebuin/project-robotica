@@ -2,6 +2,27 @@
 
 import math
 
+def dist_line_line(l1, l2):
+    """
+    Calculate the distance between two line segments.
+    Inputs:
+        l1: A tuple with the begin and end points of the line segment:
+            ((x1, y1), (x2, y2))
+        l2: Id.
+    Output:
+        The distance between the line segments.
+    """
+    t1, t2 = intersect_lines(l1, l2)
+    if t1 >= 0 and t1 <= 1 and t2 >= 0 and t2 <= 1:
+        return 0
+    else:
+        return min(
+            dist_point_line(l1[0], l2),
+            dist_point_line(l1[1], l2),
+            dist_point_line(l2[0], l1),
+            dist_point_line(l2[1], l1)
+        )
+
 def dist_point_line(p0, l):
     """
     Calculate the distance between a point and a line segment.

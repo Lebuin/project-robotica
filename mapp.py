@@ -9,6 +9,8 @@ import geom
 
 class Map:
     
+    wall_spacing = 0.8
+    
     def __init__(self, width, height, resolution):
         """
         Initialize the map.
@@ -161,7 +163,7 @@ class Map:
             ((0, self.height), (0, 0))
         ])
         
-        # Put num extra walls on the map.
+        '''# Put num extra walls on the map.
         for i in range(num):
             
             # Calculate a random begin point for the wall.
@@ -182,7 +184,37 @@ class Map:
             )
             
             # Add the wall to the list of walls.
-            self.walls.append(((x_start, y_start), (x_end, y_end)))
+            self.walls.append(((x_start, y_start), (x_end, y_end)))'''
+        
+        for i in range(num):
+            # Calculate a random begin and end point for the wall.
+            '''x_start = random.random() * self.width
+            y_start = random.random() * self.height
+            x_end = random.random() * self.width
+            y_end = random.random() * self.height'''
+            
+            intersect = True
+            while intersect:
+                intersect = False
+                new_wall = (
+                    (
+                        random.random() * self.width,
+                        random.random() * self.height
+                    ),
+                    (
+                        random.random() * self.width,
+                        random.random() * self.height
+                    )
+                )
+                
+                for wall in self.walls:
+                    d = geom.dist_line_line(wall, new_wall)
+                    if d < self.wall_spacing:
+                        intersect = True
+                        break
+            
+            self.walls.append(new_wall)
+        
     
     def draw(self, floor=True, walls=True, robot=None, particles=None):
         """
@@ -234,7 +266,7 @@ class Map:
                 particle = (value, 255, 255-value)
                 base = im.getpixel(p)
                 
-                colour = tuple([int(0.3*x + 0.7*y) for x,y in zip(base, particle)])
+                colour = tuple([int(0.4*x + 0.6*y) for x,y in zip(base, particle)])
                 im.putpixel(p, colour)
         
         return im
