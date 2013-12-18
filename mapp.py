@@ -197,24 +197,6 @@ class Map:
             data = [(a, a, a) for a in self.floor]
             im.putdata(data)
         
-        # Draw the particles as green points.
-        if particles is not None:
-            pixels = {}
-            max_value = 0
-            
-            for particle in particles:
-                p = self.coor_to_pixel(particle[1])
-                if p not in pixels:
-                    pixels[p] = 0
-                pixels[p] += 1
-                
-                if pixels[p] > max_value:
-                    max_value = pixels[p]
-            
-            for p in pixels:
-                value = int(255 * pixels[p] / max_value)
-                draw.point(p, fill=(1 - value, 255, value))
-        
         # Draw the robot as a red 3x3 square.
         if robot is not None:
             centre = self.coor_to_pixel(robot)
@@ -232,6 +214,30 @@ class Map:
                     self.coor_to_pixel(wall[1])
                 )
                 draw.line(w, fill=0)
+        
+        # Draw the particles as green points.
+        if particles is not None:
+            pixels = {}
+            max_value = 0
+            
+            for particle in particles:
+                p = self.coor_to_pixel(particle[1])
+                if p not in pixels:
+                    pixels[p] = 0
+                pixels[p] += 1
+                
+                if pixels[p] > max_value:
+                    max_value = pixels[p]
+            
+            for p in pixels:
+                value = self.get_pixel(p)
+                base = (value, value, value)
+                
+                value = int(255 * pixels[p] / max_value)
+                part = (1 - value, 255, value)
+                
+                colour = tuple([int(0.2*x + 0.8*y) for x,y in zip(base, part)])
+                draw.point(p, fill=colour)
         
         return im
     

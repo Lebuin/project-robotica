@@ -8,22 +8,28 @@ import geom
 
 class Robot:
     
-    d_sigma = 0.05 # Uncertainty for distances.
-    a_sigma = 0.05 # Uncertainty for angles.
-    size = 0.2 # Size of the robot in meters.
-    
-    ang = 0
-    coor = (0, 0)
-    
-    num_particles = 1000
-    particles = []
-    
-    def __init__(self, mapp):
+    def __init__(self, mapp, num_particles):
         """
         Initialize the robot with a map.
         Inputs:
             mapp: a Map object on which the robot will move.
         """
+        
+        self.d_sigma = 0.05 # Uncertainty for distances.
+        self.a_sigma = 0.05 # Uncertainty for angles.
+        self.size = 0.2 # Size of the robot in meters.
+        
+        self.ang = 0
+        self.coor = (0, 0)
+        
+        self.alp_slow = 0.08
+        self.alp_fast = 0.3
+        self.w_avg = 1
+        self.w_slow = 1
+        self.w_fast = 1
+        
+        self.num_particles = num_particles
+        self.particles = []
         
         self.mapp = mapp
         
@@ -138,30 +144,39 @@ class Robot:
         # Initialize the temporary particle list with a dummy particle.
         # Elements are of the form ((ang, (x, y)), weight)
         temp = [((0, (0, 0)), 0)]
+        w_avg = 0
         for particle in self.particles:
             new_part = self.motion_model(u, particle)
-            weight = self.measurement_model(particle)
+            weight = self.measurement_model(new_part)
             
-            temp.append((new_part, temp[-1][1] + weight))
+            temp.append((new_part, temp[-1][1] + weight, self.mapp.get_coordinate(particle[1])))
+            w_avg += weight / self.num_particles
         
         # Remove the dummy particle and empty the particle list.
         temp.pop(0)
         self.particles = []
         max_weight = temp[-1][1]
+        self.w_slow += self.alp_slow * (w_avg - self.w_slow)
+        self.w_fast += self.alp_fast * (w_avg - self.w_fast)
+        print((1 - self.w_fast/self.w_slow) / 2)
         
         # Add num_particles new particles to the list, according to the
         # cumulative distribution stored in temp[i][1].
         for i in range(self.num_particles):
-            selector = random.random() * max_weight
+            if random.random() < (1 - self.w_fast/self.w_slow) / 2:
+                particle = self.random_particle()
+                
+            else:
+                selector = random.random() * max_weight
+                
+                # Find the largest temporary particle whose cumulative
+                # weight is smaller than the random selector.
+                k = 0
+                while temp[k][1] < selector:
+                    k += 1
+                particle = temp[k][0]
             
-            # Find the largest temporary particle whose cumulative
-            # weight is smaller than the random selector.
-            k = 0
-            while temp[k][1] < selector:
-                k += 1
-            
-            # Add the found particle to the particle list.
-            self.particles.append(temp[k][0])
+            self.particles.append(particle)
     
     def print(self):
         """
@@ -331,4 +346,14 @@ class Robot2(Robot):
         if self.mapp.get_coordinate(coor) == self.measurement:
             return 1
         else:
-            return 0
+            return 0.1
+    
+    def random_particle(self):
+        # Choose a particle only when the colour of the floor under it
+        # is right.
+        while True:
+            x = random.random() * self.mapp.width
+            y = random.random() * self.mapp.height
+            if self.mapp.get_coordinate((x, y)) == self.measurement:
+                ang = random.random() * 2*math.pi
+                return (ang, (x, y))
