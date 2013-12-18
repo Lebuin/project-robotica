@@ -47,3 +47,27 @@ def dist_points(a, b):
     """
     
     return math.hypot(b[0]-a[0], b[1]-a[1])
+
+def intersect_lines(l1, l2):
+    '''
+    Get the parameters for which the two lines intersect. If these both 
+    lie between 0 and 1, the lines intersect between their begin and end
+    point.
+    Inputs:
+        l1: A tuple of the form ((x_start, y_start), (x_end, y_end)).
+        l2: Id.
+    Output:
+        A tuple containing the parameters for the two lines: (p1, p2).
+    '''
+    
+    a1, a2 = l1[0], l1[1]
+    b1, b2 = l2[0], l2[1]
+    
+    t1 = ((b1[1]-b2[1]) * (a1[0]-b1[0]) - (b1[0]-b2[0]) * (a1[1]-b1[1]))
+    t2 = ((a1[1]-a2[1]) * (a1[0]-b1[0]) - (a1[0]-a2[0]) * (a1[1]-b1[1]))
+    n = ((b2[0]-b1[0]) * (a1[1]-a2[1]) - (a1[0]-a2[0]) * (b2[1]-b1[1]))
+    
+    if n == 0: # The lines are parallel
+        return (float('inf'), float('inf'))
+    else:
+        return (t1/n, t2/n)

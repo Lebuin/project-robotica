@@ -72,7 +72,7 @@ class Robot:
         """
         
         # If no state is given, use the current state of the robot.
-        if not state:
+        if state is None:
             state = (self.ang, self.coor)
         x = state[1][0]
         y = state[1][1]
@@ -115,13 +115,6 @@ class Robot:
         y += step * y_step
         
         return (ang, (x, y))
-    
-    def measurement_model(self):
-        """
-        TODO: not implemented yet.
-        """
-        
-        return 1
     
     def move(self, ang, dist):
         """
@@ -177,7 +170,68 @@ class Robot:
 
 class Robot1(Robot):
     
-    pass
+    half_measures = 25  # Half of the number of measurements (the total
+                        # number must be even to simplify calculations.)
+    max_range = 10 # The maximal measuring distance.
+    
+    def measure(self, ang=None, coor=None):
+        
+        # If no state is given, use the current state of the robot.
+        if ang is None and coor is None:
+            ang = self.ang
+            coor = self.coor
+        
+        measurements = []
+        
+        # Do range_resolution measurements at uniform angles.
+        for i in range(self.half_measures):
+            theta = math.pi * i / self.half_measures
+            real_angle = random.gauss(ang + theta, self.a_sigma)
+            beam = (
+                coor, (
+                    coor[0] + math.cos(real_angle),
+                    coor[1] + math.sin(real_angle)
+                )
+            )
+            
+            # Loop through all the walls, and see if the beam hits them.
+            # We will do this in both positive and negative direction,
+            # so at the end of the loop we have the distances to the
+            # closest wall on either side of the robot.
+            pos_dist = self.max_range
+            neg_dist = -self.max_range
+            for wall in self.mapp.walls:
+                
+                # Find the parameters for which the beam and the wall
+                # intersect.
+                t1, t2 = geom.intersect_lines(beam, wall)
+                
+                # If t2 lies between 0 and 1, the beam hits the wall
+                # at a distance equal to t1.
+                if t2 >= 0 and t2 <= 1:
+                    if t1 > 0 and t1 < pos_dist:
+                        pos_dist = t1
+                    elif t1 < 0 and t1 > neg_dist:
+                        neg_dist = t1
+            
+            # Add a noised version of both measurements to the list if
+            # they are valid.
+            if pos_dist < self.max_range:
+                measurements.append((
+                    theta,
+                    random.gauss(pos_dist, self.d_sigma * pos_dist)
+                ))
+            if neg_dist > -self.max_range:
+                measurements.append((
+                    -theta,
+                    random.gauss(pos_dist, self.d_sigma * pos_dist)
+                ))
+            
+        return measurements
+    
+    def measurement_model(self):
+        
+       return 1
 
 
 class Robot2(Robot):
