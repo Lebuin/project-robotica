@@ -73,14 +73,19 @@ class Robot:
         
         # If no state is given, use the current state of the robot.
         if state is None:
-            state = (self.ang, self.coor)
-        x = state[1][0]
-        y = state[1][1]
+            ang = self.ang
+            coor = self.coor
+        else:
+            ang = state[0]
+            coor = state[1]
+        
+        #    state = (self.ang, self.coor)
+        #x = state[1][0]
+        #y = state[1][1]
         
         # Calculate the angle and distance under which to move.
-        ang = state[0] + random.gauss(u[0], self.a_sigma)
+        ang += random.gauss(u[0], self.a_sigma)
         dist = random.gauss(u[1], u[1] * self.d_sigma)
-        dist = u[1]
         
         # Calculate a step size of at most 0.1, so that the destination
         # will be exactly reached.
@@ -98,8 +103,8 @@ class Robot:
             # steps.
             step += 1
             position = (
-                x + step * x_step,
-                y + step * y_step
+                coor[0] + step * x_step,
+                coor[1] + step * y_step
             )
             
             # Check if the robot collides with any of the walls. If so,
@@ -111,8 +116,8 @@ class Robot:
                     break
         
         # Calculate the final position of the robot and return this.
-        x += step * x_step
-        y += step * y_step
+        x = coor[0] + step * x_step
+        y = coor[1] + step * y_step
         
         return (ang, (x, y))
     
@@ -172,14 +177,29 @@ class Robot1(Robot):
     
     half_measures = 25  # Half of the number of measurements (the total
                         # number must be even to simplify calculations.)
-    max_range = 10 # The maximal measuring distance.
+    max_range = 10  # The maximal measuring distance.
+    hit_sigma = 0.05  # See Thrun p. 172. This must be multiplied by
+                      # the distance of the measurement.
     
-    def measure(self, ang=None, coor=None):
+    def measure(self, state=None):
+        '''
+        Do a range scan around a location on the map.
+        Inputs:
+            state: A tuple of the form (angle, (x, y)) describing the
+                robot location.
+        Output:
+            An array with at most half_measures*2 measurements.
+            Measurements are of the form (relative angle, distance) and
+            incorporate noise.
+        '''
         
         # If no state is given, use the current state of the robot.
-        if ang is None and coor is None:
+        if state is None:
             ang = self.ang
             coor = self.coor
+        else:
+            ang = state[0]
+            coor = state[1]
         
         measurements = []
         
@@ -229,9 +249,47 @@ class Robot1(Robot):
             
         return measurements
     
-    def measurement_model(self):
+    def measurement_model(self, measurements, state=None):
+        '''
+        Calculate the probability of a range scan for a certain robot
+        location.
+        Inputs:
+            measurements: An array of measurements, as returned by
+                self.measure.
+            state: A tuple of the form (angle, (x, y)) describing the
+                robot location.
+        Output:
+            The probability of the scan.
+        '''
         
-       return 1
+        # If no state is given, use the current state of the robot.
+        if state is None:
+            ang = self.ang
+            coor = self.coor
+        else:
+            ang = state[0]
+            coor = state[1]
+        
+        prob = 1
+        sqrt2pi = math.sqrt(2*math.pi)
+        
+        for meas in measurements:
+            x = coor[0] + meas[1] * cos(ang + meas[0])
+            y = coor[1] + meas[1] * sin(ang + meas[0])
+            
+            min_d = float('inf')
+            for wall in walls:
+                d = dist_point_line((x, y), wall)
+                if d < min_d:
+                    min_d = d
+            
+            # Multiply the total measurement probability by the 
+            # probability of this measurement, using a Gauss function
+            # with mean 0 and std dev hit_sigma * distance.
+            sigma = hit_sigma * meas[1]
+            prob *= math.exp(-d**2 / (2*sigma**2)) / (sigma*sqrt2pi)
+            
+        return prob
 
 
 class Robot2(Robot):
