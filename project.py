@@ -2,11 +2,12 @@
 
 import random
 import math
+import os
 
 import mapp
 import robot
 
-# Draw a map.
+# Load a map, or draw one.
 width = 100
 height = 100
 resolution = 0.25
@@ -15,8 +16,15 @@ num_areas = 100
 num_colours = 10
 num_walls = 10
 
+path = 'map.db'
+
 ma = mapp.Map(width, height, resolution)
-ma.fill_floor(num_areas, num_colours)
+if os.path.exists(path):
+    ma.load(path)
+else:
+    ma.fill_floor(num_areas, num_colours)
+    ma.save(path)
+
 ma.place_walls(num_walls)
 
 # Initialize the robots and find a good starting point for them.

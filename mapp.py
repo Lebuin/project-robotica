@@ -3,6 +3,7 @@
 from PIL import Image, ImageDraw
 import random
 import math
+import shelve
 
 import geom
 
@@ -233,3 +234,17 @@ class Map:
                 draw.line(w, fill=0)
         
         return im
+    
+    def save(self, path):
+        
+        db = shelve.open(path, 'c')
+        db['floor'] = self.floor
+        db['walls'] = self.walls
+        db.close()
+    
+    def load(self, path):
+        
+        db = shelve.open(path, 'r')
+        self.floor = db['floor']
+        self.walls = db['walls']
+        db.close()
