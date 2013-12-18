@@ -59,7 +59,7 @@ class Map:
         
         return self.get_pixel(coor) == 255
     
-    def meter_to_pixel(self, coor):
+    def coor_to_pixel(self, coor):
         """
         Convert a coordinate in meters to a pixel coordinate.
         Inputs:
@@ -81,7 +81,7 @@ class Map:
             The value of the colour at the given location.
         """
         
-        return self.get_pixel(self.meter_to_pixel(coor))
+        return self.get_pixel(self.coor_to_pixel(coor))
     
     def closest_wall(self, coor):
         """
@@ -183,26 +183,64 @@ class Map:
             # Add the wall to the list of walls.
             self.walls.append(((x_start, y_start), (x_end, y_end)))
     
-    def draw_map(self, path):
+    def draw(self, floor=True, walls=True, robot=None, particles=None):
         """
-        Draw the map to an image file.
-        Inputs:
-            path: The path to the file, including an extension accepted
-                by PIL.
+        Draw the map to an image.
         """
         
-        im = Image.new('L', (self.wpix, self.hpix))
+        im = Image.new('RGB', (self.wpix, self.hpix))
+        draw = ImageDraw.Draw(im)
         
         # Draw the floor.
-        im.putdata(self.floor)
+        if floor:
+            data = [(a, a, a) for a in self.floor]
+            im.putdata(data)
+        
+        # Draw the particles as green points.
+        if particles is not None:
+            pixels = {}
+            max_value = 0
+            
+            for particle in particles:
+                p = self.coor_to_pixel(particle[1])
+                if p not in pixels:
+                    pixels[p] = 0
+                pixels[p] += 1
+                
+                if pixels[p] > max_value:
+                    max_value = pixels[p]
+            
+            for p in pixels:
+                value = int(255 * pixels[p] / max_value)
+                draw.point(p, fill=(0, value, 0))
+            
+            
+        
+        # Draw the robot as a red 3x3 square.
+        if robot is not None:
+            centre = self.coor_to_pixel(robot)
+            box = [
+                (centre[0]-1, centre[1]-1),
+                (centre[0]+2, centre[1]+2)
+            ]
+            draw.rectangle(box, fill=(255, 0, 0))
         
         # Draw the walls as lines.
-        draw = ImageDraw.Draw(im)
-        for wall in self.walls:
-            w = (
-                self.meter_to_pixel(wall[0]),
-                self.meter_to_pixel(wall[1])
-            )
-            draw.line(w, fill=0)
+        if walls:
+            for wall in self.walls:
+                w = (
+                    self.coor_to_pixel(wall[0]),
+                    self.coor_to_pixel(wall[1])
+                )
+                draw.line(w, fill=0)
         
-        im.save(path)
+        return im
+    
+    def save(self, path):
+        """
+        Draw the map and save it to a file.
+        Inputs:
+            path: the path to the image file.
+        """
+        
+        self.draw().save(path)

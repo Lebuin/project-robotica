@@ -12,6 +12,9 @@ class Robot:
     a_sigma = 0.05 # Uncertainty for angles.
     size = 0.2 # Size of the robot in meters.
     
+    ang = 0
+    coor = (0, 0)
+    
     num_particles = 100
     particles = []
     
@@ -169,8 +172,8 @@ class Robot:
         """
         
         print('angle: ' + str(round(self.ang, 2)) +
-            ', coordinates: ('+str(round(self.x, 2)) +
-            ', ' + str(round(self.y, 2)) + ')')    
+            ', coordinates: ('+str(round(self.coor[0], 2)) +
+            ', ' + str(round(self.coor[1], 2)) + ')')
 
 
 class Robot1(Robot):
@@ -182,7 +185,7 @@ class Robot1(Robot):
                       # the distance of the measurement.
     
     def measure(self, state=None):
-        '''
+        """
         Do a range scan around a location on the map.
         Inputs:
             state: A tuple of the form (angle, (x, y)) describing the
@@ -191,7 +194,7 @@ class Robot1(Robot):
             An array with at most half_measures*2 measurements.
             Measurements are of the form (relative angle, distance) and
             incorporate noise.
-        '''
+        """
         
         # If no state is given, use the current state of the robot.
         if state is None:
@@ -250,7 +253,7 @@ class Robot1(Robot):
         return measurements
     
     def measurement_model(self, measurements, state=None):
-        '''
+        """
         Calculate the probability of a given range scan for a robot
         location.
         Inputs:
@@ -260,7 +263,7 @@ class Robot1(Robot):
                 robot location.
         Output:
             The probability of the scan.
-        '''
+        """
         
         # If no state is given, use the current state of the robot.
         if state is None:
@@ -292,6 +295,13 @@ class Robot1(Robot):
 class Robot2(Robot):
     
     def measure(self, state=None):
+        """
+        Measure the colour of the floor under the robot.
+        Inputs:
+            state: The location of the robot as a tuple (angle, (x, y)).
+        Output:
+            The value of the colour of the floor.
+        """
         
         # If no state is given, use the current state of the robot.
         if state is None:
@@ -302,6 +312,16 @@ class Robot2(Robot):
         return self.mapp.get_coordinate(coor)
     
     def measurement_model(self, measurement, state=None):
+        """
+        Calculate the probability of a measurement at a location of the
+        robot.
+        Inputs:
+            measurement: A value representing the measured color of the
+                floor.
+            state: The location of the robot as a tuple (angle, (x, y)).
+        Output:
+            The probability of the measurement.
+        """
         
         # If no state is given, use the current state of the robot.
         if state is None:
