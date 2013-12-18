@@ -9,8 +9,6 @@ import geom
 
 class Map:
     
-    walls = []
-    
     def __init__(self, width, height, resolution):
         """
         Initialize the map.
@@ -19,6 +17,8 @@ class Map:
             height: The height of the map in meters.
             resolution: The size of a pixel in meters.
         """
+        
+        self.walls = []
         
         self.width = width
         self.height = height
@@ -69,7 +69,7 @@ class Map:
             A tuple (x, y).
         """
         
-        x = int(round(coor[0] / self.resolution))
+        x = int(round(coor[0]/self.resolution))
         y = self.hpix - int(round(coor[1]/self.resolution)) - 1
         return (x, y)
     
@@ -197,14 +197,14 @@ class Map:
             data = [(a, a, a) for a in self.floor]
             im.putdata(data)
         
-        # Draw the robot as a red 3x3 square.
+        # Draw the robot as a red 2x2 square.
         if robot is not None:
-            centre = self.coor_to_pixel(robot)
-            box = [
-                (centre[0]-1, centre[1]-1),
-                (centre[0]+2, centre[1]+2)
-            ]
-            draw.rectangle(box, fill=(255, 0, 0))
+            x, y = robot
+            x1 = int(math.floor(x/self.resolution))
+            y1 = self.hpix - int(math.floor(y/self.resolution)) - 1
+            x2 = int(math.ceil(x/self.resolution))
+            y2 = self.hpix - int(math.ceil(y/self.resolution)) - 1
+            draw.rectangle((x1, y1, x2, y2), fill=(255, 0, 0))
         
         # Draw the walls as lines.
         if walls:
@@ -230,14 +230,12 @@ class Map:
                     max_value = pixels[p]
             
             for p in pixels:
-                value = self.get_pixel(p)
-                base = (value, value, value)
-                
                 value = int(255 * pixels[p] / max_value)
-                part = (1 - value, 255, value)
+                particle = (value, 255, 255-value)
+                base = im.getpixel(p)
                 
-                colour = tuple([int(0.2*x + 0.8*y) for x,y in zip(base, part)])
-                draw.point(p, fill=colour)
+                colour = tuple([int(0.3*x + 0.7*y) for x,y in zip(base, particle)])
+                im.putpixel(p, colour)
         
         return im
     
