@@ -10,13 +10,13 @@ class Map:
     walls = []
     
     def __init__(self, width, height, resolution):
-        '''
+        """
         Initialize the map.
         Inputs:
             width: The width of the map in meters.
             height: The height of the map in meters.
             resolution: The size of a pixel in meters.
-        '''
+        """
         
         self.width = width
         self.height = height
@@ -26,76 +26,69 @@ class Map:
         self.hpix = int(math.ceil(height / resolution)) + 1
         self.floor = [255 for i in range(self.wpix * self.hpix)]
     
-    
     def get_pixel(self, coor):
-        '''
+        """
         Get the value of a pixel on the floor.
         Inputs:
             coor: A tuple (x, y).
         Output:
             An integer in the range [0,255].
-        '''
+        """
         
         return self.floor[self.wpix*coor[1] + coor[0]]
     
-    
     def set_pixel(self, coor, value):
-        '''
+        """
         Set a pixel on the floor.
         Inputs:
             coor: A tuple (x, y).
             value: An integer in the range [0,255].
-        '''
+        """
         
         self.floor[self.wpix*coor[1] + coor[0]] = value
     
-    
     def is_empty(self, coor):
-        '''
+        """
         Check if a pixel has been coloured.
         Inputs:
             coor: A tuple (x, y).
         Output:
             True if the pixel is empty, False otherwise.
-        '''
+        """
         
         return self.get_pixel(coor) == 255
     
-    
     def meter_to_pixel(self, coor):
-        '''
+        """
         Convert a coordinate in meters to a pixel coordinate.
         Inputs:
             coor: A tuple (x, y).
         Output:
             A tuple (x, y).
-        '''
+        """
         
         x = int(round(coor[0] / self.resolution))
         y = self.hpix - int(round(coor[1]/self.resolution)) - 1
         return (x, y)
     
-    
-    
     def get_coordinate(self, coor):
-        '''
+        """
         Get the colour of a coordinate in meters.
         Inputs:
             coor: A tuple (x, y)
         Output:
             The value of the colour at the given location.
-        '''
+        """
         
         return self.get_pixel(meter_to_pixel(coor))
     
-    
     def fill_floor(self, num_areas, num_colours):
-        '''
+        """
         Draw the colours on the floor of the map.
         Inputs:
             num_areas: The number of differently colored areas.
             num_colours: The number of different colours allowed.
-        '''
+        """
         
         # Calculate the boundaries and distances between the different
         # possible colours.
@@ -129,18 +122,18 @@ class Map:
             # Add empty neighbouring pixels to the todo list. Give them
             # the same colour as the current pixel.
             for i,j in [(-1,0), (1,0), (0,-1), (0,1)]:
-                if x+i >= 0 and x+i < self.wpix and \
-                    y+j >= 0 and y+j < self.hpix and \
-                    self.is_empty((coor[0]+i, coor[1]+j)):
-                        todo.append((coor, colour))
-    
+                x, y = coor[0] + i, coor[1] + j
+                if(x >= 0 and x < self.wpix and
+                        y >= 0 and y < self.hpix and
+                        self.is_empty((x, y))):
+                    todo.append(((x, y), colour))
     
     def place_walls(self, num):
-        '''
+        """
         Put walls on the map.
         Inputs:
             num: The number of walls to place.
-        '''
+        """
         
         # Add walls around the map.
         self.walls.extend([
@@ -173,14 +166,13 @@ class Map:
             # Add the wall to the list of walls.
             self.walls.append(((x_start, y_start), (x_end, y_end)))
     
-    
     def draw_map(self, path):
-        '''
+        """
         Draw the map to an image file.
         Inputs:
             path: The path to the file, including an extension accepted
                 by PIL.
-        '''
+        """
         
         im = Image.new('L', (self.wpix, self.hpix))
         

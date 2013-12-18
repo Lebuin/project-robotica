@@ -1,0 +1,49 @@
+#!/usr/bin/env python3
+
+def dist_point_line(p0, l):
+    """
+    Calculate the distance between a point and a line segment.
+    Inputs:
+        p0: A tuple with the coordinates of the point: (x, y).
+        l: A tuple with the begin and end points of the line segment:
+            ((x1, y1), (x2, y2))
+    Output:
+        The distance between the point and the line segment.
+    """
+    
+    p1 = l[0]
+    p2 = l[1]
+    
+    # Calculate t so that the projection of p0 on the line is at the
+    # point p1 + t*(p2-p1): t = dot(p0-p1, p2-p1) / |p1, p2|**2
+    dot = ((p0[0]-p1[0])*(p2[0]-p1[0]) +  (p0[1]-p1[1])*(p2[1]-p1[1]))
+    sqnorm = ((p2[0]-p1[0])**2 + (p2[1]-p1[1])**2)
+    t = dot / sqnorm
+    
+    # If t is negatif, p1 is the closest point of the line segment.
+    if t < 0:
+        return dist_points(p0, p1)
+    
+    # If t > 1, p2 is the closest point.
+    elif t > 1:
+        return dist_points(p0, p2)
+    
+    # Otherwise, the orthogonal projection is the closest point.
+    else:
+        projection = (
+            p1[0] + t * (p2[0]-p1[0]),
+            p1[1] + t * (p2[1]-p1[1])
+        )
+        return dist_points(p0, projection)
+
+def dist_points(a, b):
+    """
+    Calculate the distance between two points.
+    Inputs:
+        a: A tuple (x, y).
+        b: Id.
+    Output:
+        The distance between the two points.
+    """
+    
+    return math.hypot(b[0]-a[0], b[1]-a[1])

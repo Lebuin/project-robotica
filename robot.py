@@ -2,7 +2,9 @@
 
 import math
 import random
+
 import mapp
+import geom
 
 class Robot:
     
@@ -14,11 +16,11 @@ class Robot:
     particles = []
     
     def __init__(self, mapp):
-        '''
+        """
         Initialize the robot with a map.
         Inputs:
             mapp: a Map object on which the robot will move.
-        '''
+        """
         
         self.mapp = mapp
         
@@ -32,22 +34,20 @@ class Robot:
                 )
             ))
     
-    
     def put(self, ang, coor):
-        '''
+        """
         Put the robot on a place on the map.
         Inputs:
             ang: The orientation of the robot in radians.
             x: The x-coordinate of the robot in meters.
             y: the y-coordinate of the robot in meters.
-        '''
+        """
         
         self.ang = ang
         self.coor = coor
     
-    
     def intersects(self, position, wall):
-        '''
+        """
         Checks if the wall intersects the robot at a given position.
         Inputs:
             state: A tuple with the robot coordinates: (x, y).
@@ -55,13 +55,12 @@ class Robot:
                 ((x1, y1), (x2, y2))
         Output:
             True if the wall intersects the robot, False otherwise.
-        '''
+        """
         
-        return point_line_dist(position, wall) < self.size
+        return geom.dist_point_line(position, wall) < self.size
     
-    
-    def motion_model(self, u, state = None):
-        '''
+    def motion_model(self, u, state=None):
+        """
         Calculate the next state for a given state and control.
         Inputs:
             u: A tuple of the form (angle, distance) describing the
@@ -70,7 +69,7 @@ class Robot:
                 y_coordinate)) describing the current state.
         Output:
             A tuple of the form (angle, x_coordinate, y_coordinate).
-        '''
+        """
         
         # If no state is given, use the current state of the robot.
         if not state:
@@ -117,23 +116,21 @@ class Robot:
         
         return (ang, (x, y))
     
-    
     def measurement_model(self):
-        '''
+        """
         TODO: not implemented yet.
-        '''
+        """
         
         return 1
     
-    
     def move(self, ang, dist):
-        '''
+        """
         Move the robot according to the motion model and update the
         particles.
         Inputs:
             ang: The angle over which to rotate the robot.
             dist: The distance over which to move the robot.
-        '''
+        """
         
         u = (ang, dist)
         
@@ -168,63 +165,15 @@ class Robot:
             # Add the found particle to the particle list.
             self.particles.append(temp[k][0])
     
-    
     def print(self):
-        '''
+        """
         Print info on the location of the robot.
-        '''
+        """
         
         print('angle: ' + str(round(self.ang, 2)) +
             ', coordinates: ('+str(round(self.x, 2)) +
             ', ' + str(round(self.y, 2)) + ')')    
 
-
-def point_line_dist(p0, l):
-    '''
-    Calculate the distance between a point and a line segment.
-    Inputs:
-        p0: A tuple with the coordinates of the point: (x, y).
-        l: A tuple with the begin and end points of the line segment:
-            ((x1, y1), (x2, y2))
-    Output:
-        The distance between the point and the line segment.
-    '''
-    
-    p1 = l[0]
-    p2 = l[1]
-    
-    # Calculate t so that the projection of p0 on the line is at the
-    # point p1 + t*(p2-p1): t = dot(p0-p1, p2-p1) / |p1, p2|**2
-    t = ((p0[0]-p1[0]) * (p2[0]-p1[0]) +  (p0[1]-p1[1]) * (p2[1]-p1[1])) / ((p2[0]-p1[0])**2 + (p2[1]-p1[1])**2)
-    
-    # If t is negatif, p1 is the closest point of the line segment.
-    if t < 0:
-        return point_dist(p0, p1)
-    
-    # If t > 1, p2 is the closest point.
-    elif t > 1:
-        return point_dist(p0, p2)
-    
-    # Otherwise, the orthogonal projection is the closest point.
-    else:
-        projection = (
-            p1[0] + t * (p2[0]-p1[0]),
-            p1[1] + t * (p2[1]-p1[1])
-        )
-        return point_dist(p0, projection)
-
-
-def point_dist(a, b):
-    '''
-    Calculate the distance between two points.
-    Inputs:
-        a: A tuple (x, y).
-        b: Id.
-    Output:
-        The distance between the two points.
-    '''
-    
-    return math.hypot(b[0]-a[0], b[1]-a[1])
 
 class Robot1(Robot):
     
