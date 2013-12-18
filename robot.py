@@ -82,10 +82,6 @@ class Robot:
             ang = state[0]
             coor = state[1]
         
-        #    state = (self.ang, self.coor)
-        #x = state[1][0]
-        #y = state[1][1]
-        
         # Calculate the angle and distance under which to move.
         ang += random.gauss(u[0], self.a_sigma)
         dist = random.gauss(u[1], u[1] * self.d_sigma)
@@ -137,13 +133,14 @@ class Robot:
         
         # Move the robot.
         self.ang, self.coor = self.motion_model(u)
+        self.measure()
         
         # Initialize the temporary particle list with a dummy particle.
         # Elements are of the form ((ang, (x, y)), weight)
         temp = [((0, (0, 0)), 0)]
         for particle in self.particles:
             new_part = self.motion_model(u, particle)
-            weight = self.measurement_model()
+            weight = self.measurement_model(particle)
             
             temp.append((new_part, temp[-1][1] + weight))
         
@@ -174,6 +171,12 @@ class Robot:
         print('angle: ' + str(round(self.ang, 2)) +
             ', coordinates: ('+str(round(self.coor[0], 2)) +
             ', ' + str(round(self.coor[1], 2)) + ')')
+    
+    def draw(self):
+        return self.mapp.draw(
+            robot=self.coor,
+            particles=self.particles
+        )
 
 
 class Robot1(Robot):
@@ -183,6 +186,8 @@ class Robot1(Robot):
     max_range = 10  # The maximal measuring distance.
     hit_sigma = 0.05  # See Thrun p. 172. This must be multiplied by
                       # the distance of the measurement.
+    
+    measurement = []
     
     def measure(self, state=None):
         """
@@ -204,7 +209,7 @@ class Robot1(Robot):
             ang = state[0]
             coor = state[1]
         
-        measurements = []
+        self.measurement = []
         
         # Do range_resolution measurements at uniform angles.
         for i in range(self.half_measures):
@@ -240,25 +245,21 @@ class Robot1(Robot):
             # Add a noised version of both measurements to the list if
             # they are valid.
             if pos_dist < self.max_range:
-                measurements.append((
+                self.measurement.append((
                     theta,
                     random.gauss(pos_dist, self.d_sigma * pos_dist)
                 ))
             if neg_dist > -self.max_range:
-                measurements.append((
+                self.measurement.append((
                     theta - math.pi,
                     random.gauss(-neg_dist, self.d_sigma * pos_dist)
                 ))
-            
-        return measurements
     
-    def measurement_model(self, measurements, state=None):
+    def measurement_model(self, state=None):
         """
         Calculate the probability of a given range scan for a robot
         location.
         Inputs:
-            measurements: An array of measurements, as returned by
-                self.measure.
             state: A tuple of the form (angle, (x, y)) describing the
                 robot location.
         Output:
@@ -294,13 +295,13 @@ class Robot1(Robot):
 
 class Robot2(Robot):
     
+    measurement = 0
+    
     def measure(self, state=None):
         """
         Measure the colour of the floor under the robot.
         Inputs:
             state: The location of the robot as a tuple (angle, (x, y)).
-        Output:
-            The value of the colour of the floor.
         """
         
         # If no state is given, use the current state of the robot.
@@ -309,15 +310,13 @@ class Robot2(Robot):
         else:
             coor = state[1]
         
-        return self.mapp.get_coordinate(coor)
+        self.measurement = self.mapp.get_coordinate(coor)
     
-    def measurement_model(self, measurement, state=None):
+    def measurement_model(self, state=None):
         """
         Calculate the probability of a measurement at a location of the
         robot.
         Inputs:
-            measurement: A value representing the measured color of the
-                floor.
             state: The location of the robot as a tuple (angle, (x, y)).
         Output:
             The probability of the measurement.
@@ -329,7 +328,7 @@ class Robot2(Robot):
         else:
             coor = state[1]
         
-        if self.mapp.get_coordinate(coor) == measurement:
+        if self.mapp.get_coordinate(coor) == self.measurement:
             return 1
         else:
             return 0

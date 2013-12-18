@@ -211,10 +211,8 @@ class Map:
                     max_value = pixels[p]
             
             for p in pixels:
-                value = int(255 * pixels[p] / max_value)
-                draw.point(p, fill=(0, value, 0))
-            
-            
+                value = int(255 * (1 - pixels[p] / max_value))
+                draw.point(p, fill=(value, 255, value))
         
         # Draw the robot as a red 3x3 square.
         if robot is not None:
@@ -235,12 +233,3 @@ class Map:
                 draw.line(w, fill=0)
         
         return im
-    
-    def save(self, path):
-        """
-        Draw the map and save it to a file.
-        Inputs:
-            path: the path to the image file.
-        """
-        
-        self.draw().save(path)
