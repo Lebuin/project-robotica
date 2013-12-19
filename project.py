@@ -6,6 +6,7 @@ import os
 
 import mapp
 import robot
+import geom
 
 # Load a map, or draw one.
 width = 20
@@ -30,13 +31,7 @@ else:
 ma.place_walls(num_walls)
 
 # Initialize the robots and find a good starting point for them.
-r = robot.Robot1(ma, num_particles)
-
-'''r1.put(0, (10, 10))
-r1.draw().save('move-r1/test0.png')
-r1.measure()
-print(r1.measurement_model())
-print(r1.measurement_model((0, (15, 10))))'''
+r = robot.Robot2(ma, num_particles)
 
 cond = True
 while cond:
@@ -56,11 +51,14 @@ for i in range(1, 1001):
     while intersect:
         ang = random.gauss(0, 1)
         dist = 1
-        dest = (
-            r.coor[0] + dist * math.cos(r.ang + ang),
-            r.coor[1] + dist * math.sin(r.ang + ang)
-        )
-        intersect = r.mapp.intersect_wall((r.coor, dest))
+        intersect, _ = r.motion_model((ang, dist))
+        #intersect, _, _ = geom.dist_point_point(r.coor, dest[1])
+        
+        #dest = (
+            #r.coor[0] + dist * math.cos(r.ang + ang),
+            #r.coor[1] + dist * math.sin(r.ang + ang)
+        #)
+        #intersect = r.mapp.intersect_wall((r.coor, dest))
     
     r.move(ang, dist)
     r.draw().save('move-r2/test'+str(i)+'.png')

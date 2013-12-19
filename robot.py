@@ -76,7 +76,7 @@ class Robot:
             state: A tuple of the form (angle, (x_coordinate,
                 y_coordinate)) describing the current state.
         Output:
-            A tuple of the form (angle, x_coordinate, y_coordinate).
+            A tuple of the form (angle, (x, y)).
         """
         
         # If no state is given, use the current state of the robot.
@@ -123,7 +123,7 @@ class Robot:
         x = coor[0] + step * x_step
         y = coor[1] + step * y_step
         
-        return (ang, (x, y))
+        return (intersect, (ang, (x, y)))
     
     def move(self, ang, dist):
         """
@@ -137,7 +137,8 @@ class Robot:
         u = (ang, dist)
         
         # Move the robot.
-        self.ang, self.coor = self.motion_model(u)
+        _, new_state = self.motion_model(u)
+        self.ang, self.coor = new_state
         self.measure()
         
         # Initialize the temporary particle list with a dummy particle.
@@ -145,7 +146,7 @@ class Robot:
         temp = [((0, (0, 0)), 0)]
         weights = []
         for particle in self.particles:
-            new_part = self.motion_model(u, particle)
+            _, new_part = self.motion_model(u, particle)
             weight = self.measurement_model(new_part)
             
             temp.append((new_part, temp[-1][1] + weight, self.mapp.get_coordinate(particle[1])))
@@ -203,6 +204,8 @@ class Robot1(Robot):
     measurement = []
     
     def set_weights(self, weights):
+        
+        m = max(weights)
         
         w_avg = 1
         power = 1/(self.num_particles*len(self.measurement))
@@ -379,7 +382,7 @@ class Robot2(Robot):
         if self.mapp.get_coordinate(coor) == self.measurement:
             return 1
         else:
-            return 0.01
+            return 0.05
     
     """def random_particle(self):
         # Choose a particle only when the colour of the floor under it
