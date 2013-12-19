@@ -8,15 +8,15 @@ import mapp
 import robot
 
 # Load a map, or draw one.
-width = 30
-height = 10
+width = 20
+height = 20
 resolution = 0.1
 
 num_areas = 100
 num_colours = 10
-num_walls = 5
+num_walls = 10
 
-num_particles = 200
+num_particles = 100
 
 path = 'map.db'
 
@@ -33,6 +33,12 @@ ma.place_walls(num_walls)
 r1 = robot.Robot1(ma, num_particles)
 r2 = robot.Robot2(ma, num_particles)
 
+'''r1.put(0, (10, 10))
+r1.draw().save('move-r1/test0.png')
+r1.measure()
+print(r1.measurement_model())
+print(r1.measurement_model((0, (15, 10))))'''
+
 cond = True
 while cond:
     x = random.random() * ma.width
@@ -45,7 +51,7 @@ r2.put(ang, (x, y))
 
 # Move the robots around.
 r1.draw().save('move-r1/test0.png')
-for i in range(1000):
+for i in range(1, 1001):
     print(i)
     r1.move(random.gauss(0, 1), 1)
-    r1.draw().save('move-r1/test'+str(i+1)+'.png')
+    r1.draw().save('move-r1/test'+str(i)+'.png')

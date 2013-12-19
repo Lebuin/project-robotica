@@ -22,9 +22,8 @@ class Robot:
         self.ang = 0
         self.coor = (0, 0)
         
-        self.alp_slow = 0.08
-        self.alp_fast = 0.3
-        self.w_avg = 1
+        self.alp_slow = 0.1
+        self.alp_fast = 0.8
         self.w_slow = 1
         self.w_fast = 1
         
@@ -144,26 +143,25 @@ class Robot:
         # Initialize the temporary particle list with a dummy particle.
         # Elements are of the form ((ang, (x, y)), weight)
         temp = [((0, (0, 0)), 0)]
-        w_avg = 0
+        weights = []
         for particle in self.particles:
             new_part = self.motion_model(u, particle)
             weight = self.measurement_model(new_part)
             
             temp.append((new_part, temp[-1][1] + weight, self.mapp.get_coordinate(particle[1])))
-            w_avg += weight / self.num_particles
+            weights.append(weight)
         
         # Remove the dummy particle and empty the particle list.
         temp.pop(0)
         self.particles = []
         max_weight = temp[-1][1]
-        self.w_slow += self.alp_slow * (w_avg - self.w_slow)
-        self.w_fast += self.alp_fast * (w_avg - self.w_fast)
-        print((1 - self.w_fast/self.w_slow) / 2)
+        self.set_weights(weights)
         
         # Add num_particles new particles to the list, according to the
         # cumulative distribution stored in temp[i][1].
         for i in range(self.num_particles):
-            if random.random() < (1 - self.w_fast/self.w_slow) / 2:
+            if random.random() < (1 - self.w_fast/self.w_slow):
+            #if random.random() < (1 - self.w_fast/self.w_slow):
                 particle = self.random_particle()
                 
             else:
@@ -199,10 +197,23 @@ class Robot1(Robot):
     half_measures = 25  # Half of the number of measurements (the total
                         # number must be even to simplify calculations.)
     max_range = 10  # The maximal measuring distance.
-    hit_sigma = 0.05  # See Thrun p. 172. This must be multiplied by
+    hit_sigma = 0.2  # See Thrun p. 172. This must be multiplied by
                       # the distance of the measurement.
     
     measurement = []
+    
+    def set_weights(self, weights):
+        
+        w_avg = 1
+        power = 1/(self.num_particles*len(self.measurement))
+        for w in weights:
+            w_avg *= w**power
+        
+        self.w_slow += self.alp_slow * (w_avg - self.w_slow)
+        self.w_fast += self.alp_fast * (w_avg - self.w_fast)
+        
+        print((w_avg, self.w_fast, self.w_slow))
+        print((1 - self.w_fast/self.w_slow))
     
     def measure(self, state=None):
         """
@@ -259,12 +270,14 @@ class Robot1(Robot):
             
             # Add a noised version of both measurements to the list if
             # they are valid.
-            if pos_dist < self.max_range:
+            pos_dist += random.gauss(0, self.d_sigma * pos_dist)
+            neg_dist += random.gauss(0, self.d_sigma * neg_dist)
+            if pos_dist > 0.5 and pos_dist < self.max_range:
                 self.measurement.append((
                     theta,
                     random.gauss(pos_dist, self.d_sigma * pos_dist)
                 ))
-            if neg_dist > -self.max_range:
+            if neg_dist < -0.5 and neg_dist > -self.max_range:
                 self.measurement.append((
                     theta - math.pi,
                     random.gauss(-neg_dist, self.d_sigma * pos_dist)
@@ -302,10 +315,14 @@ class Robot1(Robot):
             # Multiply the total measurement probability by the 
             # probability of this measurement, using a Gauss function
             # with mean 0 and std dev hit_sigma * distance.
-            sigma = self.hit_sigma * meas[1]
-            prob *= math.exp(-d**2 / (2*sigma**2)) / (sigma*sqrt2pi)
+            #sigma = self.hit_sigma * math.sqrt(meas[1])
+            p = math.exp(-d**2 / (2*self.hit_sigma**2)) / (self.hit_sigma*sqrt2pi) + 0.05
             
-        return prob
+            if p < 0:
+                print((meas,p))
+            prob *= p
+            
+        return prob#**(1/len(self.measurement))
     
     def random_particle(self):
         x = random.random() * self.mapp.width
@@ -317,6 +334,16 @@ class Robot1(Robot):
 class Robot2(Robot):
     
     measurement = 0
+    
+    def set_weights(self, weights):
+        
+        w_avg = sum(weights) / self.num_particles
+        
+        self.w_slow += self.alp_slow * (w_avg - self.w_slow)
+        self.w_fast += self.alp_fast * (w_avg - self.w_fast)
+        
+        print((w_avg, self.w_fast, self.w_slow))
+        print((1 - self.w_fast/self.w_slow))
     
     def measure(self, state=None):
         """
@@ -352,7 +379,7 @@ class Robot2(Robot):
         if self.mapp.get_coordinate(coor) == self.measurement:
             return 1
         else:
-            return 0.1
+            return 0.01
     
     """def random_particle(self):
         # Choose a particle only when the colour of the floor under it
