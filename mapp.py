@@ -102,6 +102,14 @@ class Map:
         
         return min_d
     
+    def intersect_wall(self, line):
+        
+        for wall in self.walls:
+            if geom.dist_line_line(line, wall) == 0:
+                return True
+        
+        return False
+    
     def fill_floor(self, num_areas, num_colours):
         """
         Draw the colours on the floor of the map.
@@ -186,7 +194,7 @@ class Map:
             # Add the wall to the list of walls.
             self.walls.append(((x_start, y_start), (x_end, y_end)))'''
         
-        for i in range(num):
+        """for i in range(num):
             # Calculate a random begin and end point for the wall.
             '''x_start = random.random() * self.width
             y_start = random.random() * self.height
@@ -213,7 +221,33 @@ class Map:
                         intersect = True
                         break
             
-            self.walls.append(new_wall)
+            self.walls.append(new_wall)"""
+        
+        for i in range(num):
+            
+            close = True
+            while close:
+                x_start = random.random() * self.width
+                y_start = random.random() * self.height
+                ang = random.random() * 2*math.pi
+                
+                x_end = x_start + math.cos(ang)
+                y_end = y_start + math.sin(ang)
+                
+                close = (
+                    self.closest_wall((x_start, y_start)) < 1 or
+                    self.closest_wall((x_end, y_end)) < 1
+                )
+            
+            step = 9
+            close = False
+            while not close:
+                step += 1
+                x_end = x_start + 0.1*step * math.cos(ang)
+                y_end = y_start + 0.1*step * math.sin(ang)
+                close = self.closest_wall((x_end, y_end)) < 1.1
+            
+            self.walls.append(((x_start, y_start), (x_end, y_end)))
         
     
     def draw(self, floor=True, walls=True, robot=None, particles=None):
