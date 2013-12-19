@@ -94,6 +94,7 @@ class Map:
         Output:
             The distance to the closest wall.
         """
+        
         min_d = float('inf')
         for wall in self.walls:
             d = geom.dist_point_line(coor, wall)
@@ -103,6 +104,13 @@ class Map:
         return min_d
     
     def intersect_wall(self, line):
+        """
+        Check if the given line intersects with any of the walls.
+        Inputs:
+            line: A tuple ((x_start, y_start), (x_end, y_end))
+        Output:
+            True if the line intersects at least one wall.
+        """
         
         for wall in self.walls:
             if geom.dist_line_line(line, wall) == 0:
@@ -171,60 +179,12 @@ class Map:
             ((0, self.height), (0, 0))
         ])
         
-        '''# Put num extra walls on the map.
+        # Put num extra walls on the map.
         for i in range(num):
             
-            # Calculate a random begin point for the wall.
-            x_start = random.random() * self.width
-            y_start = random.random() * self.height
-            
-            # Calculate an end point, making sure it is in the map.
-            size = (self.width + self.height) / 2
-            length = random.gauss(size / 2, size / 4)
-            angle = random.random() * 2*math.pi
-            x_end = min(
-                self.width,
-                max(0, x_start + length * math.cos(angle))
-            )
-            y_end = min(
-                self.height,
-                max(0, y_start + length * math.sin(angle))
-            )
-            
-            # Add the wall to the list of walls.
-            self.walls.append(((x_start, y_start), (x_end, y_end)))'''
-        
-        """for i in range(num):
-            # Calculate a random begin and end point for the wall.
-            '''x_start = random.random() * self.width
-            y_start = random.random() * self.height
-            x_end = random.random() * self.width
-            y_end = random.random() * self.height'''
-            
-            intersect = True
-            while intersect:
-                intersect = False
-                new_wall = (
-                    (
-                        random.random() * self.width,
-                        random.random() * self.height
-                    ),
-                    (
-                        random.random() * self.width,
-                        random.random() * self.height
-                    )
-                )
-                
-                for wall in self.walls:
-                    d = geom.dist_line_line(wall, new_wall)
-                    if d < self.wall_spacing:
-                        intersect = True
-                        break
-            
-            self.walls.append(new_wall)"""
-        
-        for i in range(num):
-            
+            # Find a start point and angle for the wall so that it can
+            # be at least 1 meter long, while maintaining 1 meter
+            # distance to all other walls.
             close = True
             while close:
                 x_start = random.random() * self.width
@@ -239,20 +199,32 @@ class Map:
                     self.closest_wall((x_end, y_end)) < 1
                 )
             
+            # Make the wall as long as possible without coming closer
+            # than 1 meter to any other wall.
             step = 9
             close = False
             while not close:
                 step += 1
                 x_end = x_start + 0.1*step * math.cos(ang)
                 y_end = y_start + 0.1*step * math.sin(ang)
-                close = self.closest_wall((x_end, y_end)) < 1.1
+                close = (
+                    self.closest_wall((x_end, y_end)) < 1.1 or
+                    random.random() < 0.01
+                )
             
+            # Add the found wall to the list of walls.
             self.walls.append(((x_start, y_start), (x_end, y_end)))
         
     
     def draw(self, floor=True, walls=True, robot=None, particles=None):
         """
         Draw the map to an image.
+        Inputs:
+            floor: A boolean that sets whether the floor will be drawn.
+            walls: Id. for the walls.
+            robot: A tuple (x, y) that gives the robot location.
+            particles: A list with (x, y)-tuples that give the locations
+                of the particles that must be drawn.
         """
         
         im = Image.new('RGB', (self.wpix, self.hpix))
@@ -281,7 +253,7 @@ class Map:
                 )
                 draw.line(w, fill=0)
         
-        # Draw the particles as green points.
+        # Draw the particles as green/yellow points.
         if particles is not None:
             pixels = {}
             max_value = 0
@@ -306,6 +278,12 @@ class Map:
         return im
     
     def save(self, path):
+        """
+        Save the floor and walls layout to a file that can be read by
+        self.load().
+        Inputs:
+            path: The filename.
+        """
         
         db = shelve.open(path, 'c')
         db['floor'] = self.floor
@@ -313,6 +291,12 @@ class Map:
         db.close()
     
     def load(self, path):
+        """
+        Load the floor and walls layout from a file that was created by
+        self.save().
+        Inputs:
+            path: The filename.
+        """
         
         db = shelve.open(path, 'r')
         self.floor = db['floor']

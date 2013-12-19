@@ -187,6 +187,12 @@ class Robot:
             ', ' + str(round(self.coor[1], 2)) + ')')
     
     def draw(self):
+        """
+        Draw a map with the robot and current particles on it.
+        Output:
+            An Image file, from the PIL module.
+        """
+        
         return self.mapp.draw(
             robot=self.coor,
             particles=self.particles
@@ -204,8 +210,12 @@ class Robot1(Robot):
     measurement = []
     
     def set_weights(self, weights):
-        
-        m = max(weights)
+        """
+        Update the moving averages used to determine the number of
+        random particles that will be drawn.
+        Inputs:
+            weights: A list with the weights of the current particles.
+        """
         
         w_avg = 1
         power = 1/(self.num_particles*len(self.measurement))
@@ -328,6 +338,12 @@ class Robot1(Robot):
         return prob#**(1/len(self.measurement))
     
     def random_particle(self):
+        """
+        Draw a random particle on the map. Currently this is really
+        random, but this could be made better by using information on
+        the map.
+        """
+        
         x = random.random() * self.mapp.width
         y = random.random() * self.mapp.height
         ang = random.random() * 2*math.pi
@@ -339,6 +355,12 @@ class Robot2(Robot):
     measurement = 0
     
     def set_weights(self, weights):
+        """
+        Update the moving averages used to determine the number of
+        random particles that will be drawn.
+        Inputs:
+            weights: A list with the weights of the current particles.
+        """
         
         w_avg = sum(weights) / self.num_particles
         
@@ -384,16 +406,12 @@ class Robot2(Robot):
         else:
             return 0.05
     
-    """def random_particle(self):
-        # Choose a particle only when the colour of the floor under it
-        # is right.
-        while True:
-            x = random.random() * self.mapp.width
-            y = random.random() * self.mapp.height
-            if self.mapp.get_coordinate((x, y)) == self.measurement:
-                ang = random.random() * 2*math.pi
-                return (ang, (x, y))"""
     def random_particle(self):
+        """
+        Draw a random particle on the map. Currently this is really
+        random, but this could be made better by using information on
+        the map.
+        """
         x = random.random() * self.mapp.width
         y = random.random() * self.mapp.height
         ang = random.random() * 2*math.pi
