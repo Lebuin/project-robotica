@@ -10,6 +10,8 @@ import geom
 
 def test_case(name, iterations, map_size, resolution, num_areas, num_colours, num_walls, len_walls, num_particles):
     
+    data = []
+    
     # Do the test iterations times.
     for i in range(1, iterations+1):
         
@@ -33,17 +35,17 @@ def test_case(name, iterations, map_size, resolution, num_areas, num_colours, nu
         r2.put(ang, (x, y))
         
         # Move the robots until they have found their own location.
-        found1 = 0
-        found2 = 0
+        time1 = 0
+        time2 = 0
         j = 0
-        while not (found1 and found2):
+        while not (time1 and time2):
             #r1.draw().save('move-r1/test'+str(j)+'.png')
             #r2.draw().save('move-r2/test'+str(j)+'.png')
             
             j += 1
             
             # Choose the robot that wil be used to find a good control.
-            if found2 > 0:
+            if time2 > 0:
                 r = r1
             else:
                 r = r2
@@ -58,33 +60,88 @@ def test_case(name, iterations, map_size, resolution, num_areas, num_colours, nu
             dist = geom.dist_points(r.coor, dest[1])
             ang = dest[0] - r.ang
             
-            if found1 == 0 and r1.move(ang, dist, exact=True):
-                found1 = j
-            if found2 == 0 and r2.move(ang, dist, exact=True):
-                found2 = j
+            if time1 == 0 and r1.move(ang, dist, exact=True):
+                time1 = j
+            if time2 == 0 and r2.move(ang, dist, exact=True):
+                time2 = j
             
             print(
                 '\r"'+name+'" iteration '+str(i)+
                 ', time '+str(j)+
-                ', found1: '+str(found1)+
-                ', found2: '+str(found2),
+                ', time1: '+str(time1)+
+                ', time2: '+str(time2),
                 end=''
             )
-        # Todo: output test data.
+        
+        data.append((time1, time2))
         print('')
+    
+    return data
+
+def output_data(path, data):
+    f = open(path, 'w')
+    f.write('time1,time2\n')
+    for d in data:
+        f.write(str(d[0])+','+str(d[1])+'\n')
+    f.close()
 
 # Test parameters
-map_size = [20, 15, 25, 30]
+size = [20, 15, 25, 30]
 resolution = 0.1
 
-num_areas = [100, 70, 130, 160, 200]
-num_colours = [10, 7, 15]
+areas = [100, 70, 130, 160, 200]
+colours = [10, 7, 15]
 
-num_walls = [10, 7, 15]
-len_walls = [10, 8, 13, 15, 20]
+walls = [10, 7, 15]
+length = [10, 8, 13, 15, 20]
 
-num_particles = 100
+particles = [100, 50, 70, 140, 190]
+iterations = 30
 
-# Test the base case
+data_path = 'test_data/'
+
+test = {
+    'base_case': True,
+    'map_size': True,
+    'num_areas': False,
+    'num_colours': False,
+    'num_walls': False
+}
+
+# Test the base case.
 name = 'base_case'
-test_case(name, 2, 20, 0.1, 100, 10, 10, 10, 100)
+if test[name]:
+    data = test_case(name, iterations, size[0], resolution, areas[0], colours[0], walls[0], length[0], particles[0])
+    output_data(data_path+name, data)
+
+# Variable map size.
+name = 'map_size'
+if test[name]:
+    for i in range(1, len(size)):
+        n = name+str(size[i])
+        data = test_case(n, iterations, size[i], resolution, areas[0], colours[0], walls[0], length[0], particles[0])
+        output_data(data_path+n, data)
+
+# Variable number of areas.
+name = 'num_areas'
+if test[name]:
+    for i in range(1, len(areas)):
+        n = name+str(areas[i])
+        data = test_case(n, iterations, size[0], resolution, areas[i], colours[0], walls[0], length[0], particles[0])
+        output_data(data_path+n, data)
+
+# Variable number of colours.
+name = 'num_colours'
+if test[name]:
+    for i in range(1, len(colours)):
+        n = name+str(colours[i])
+        data = test_case(n, iterations, size[0], resolution, areas[0], colours[i], walls[0], length[0], particles[0])
+        output_data(data_path+n, data)
+
+# Variable number of walls.
+name = 'num_walls'
+if test[name]:
+    for i in range(1, len(walls)):
+        n = name+str(walls[i])
+        data = test_case(n, iterations, size[0], resolution, areas[0], colours[0], walls[i], length[0], particles[0])
+        output_data(data_path+n, data)

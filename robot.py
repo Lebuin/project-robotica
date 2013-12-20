@@ -228,7 +228,7 @@ class Robot1(Robot):
                         # number must be even to simplify calculations.)
     min_range = 1   # The minimal and
     max_range = 10  # maximal measuring distance.
-    hit_sigma = 0.2  # See Thrun p. 172. This must be multiplied by
+    hit_sigma = 0.2 # See Thrun p. 172. This must be multiplied by
                      # the distance of the measurement.
     w_divider = 1.5
     
@@ -253,9 +253,6 @@ class Robot1(Robot):
         
         self.w_slow += self.alp_slow * (w_avg - self.w_slow)
         self.w_fast += self.alp_fast * (w_avg - self.w_fast)
-        
-        #print((w_avg, self.w_fast, self.w_slow, avg_dist))
-        #print((1 - self.w_fast/self.w_slow/self.w_divider))
     
     def measure(self, state=None):
         """
@@ -356,15 +353,12 @@ class Robot1(Robot):
             
             # Multiply the total measurement probability by the 
             # probability of this measurement, using a Gauss function
-            # with mean 0 and std dev hit_sigma * distance.
-            #sigma = self.hit_sigma * math.sqrt(meas[1])
-            p = math.exp(-d**2 / (2*self.hit_sigma**2)) / (self.hit_sigma*sqrt2pi) + 0.05
+            # with mean 0 and std dev hit_sigma.
+            p = math.exp(-d**2 / (2*self.hit_sigma**2)) / (self.hit_sigma*sqrt2pi) + 0.01
             
-            if p < 0:
-                print((meas,p))
             prob *= p
             
-        return prob#**(1/len(self.measurement))
+        return prob
     
     def random_particle(self):
         """
@@ -398,9 +392,6 @@ class Robot2(Robot):
         
         self.w_slow += self.alp_slow * (w_avg - self.w_slow)
         self.w_fast += self.alp_fast * (w_avg - self.w_fast)
-        
-        #print((w_avg, self.w_fast, self.w_slow))
-        #print((1 - self.w_fast/self.w_slow))
     
     def measure(self, state=None):
         """

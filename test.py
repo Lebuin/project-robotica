@@ -43,7 +43,7 @@ ang = random.random() * 2*math.pi
 r.put(ang, (x, y))
 
 # Move the robots around.
-r.draw().save('move-r2/test0.png')
+r.draw().save('move-r1/test0.png')
 for i in range(1, 1001):
     print(i)
     
@@ -55,6 +55,5 @@ for i in range(1, 1001):
     
     dist = geom.dist_points(r.coor, dest[1])
     ang = dest[0] - r.ang
-    print((ang, dist))
     r.move(ang, dist, exact=True)
-    r.draw().save('move-r2/test'+str(i)+'.png')
+    r.draw().save('move-r1/test'+str(i)+'.png')
