@@ -16,19 +16,19 @@ resolution = 0.1
 num_areas = 100
 num_colours = 10
 num_walls = 10
+len_walls = 15
 
 num_particles = 100
 
-path = 'map.db'
-
+# Make a map.
 ma = mapp.Map(width, height, resolution)
+path = 'map.db'
 if os.path.exists(path):
     ma.load(path)
 else:
     ma.fill_floor(num_areas, num_colours)
     ma.save(path)
-
-ma.place_walls(num_walls)
+ma.place_walls(num_walls, len_walls)
 
 # Initialize the robots and find a good starting point for them.
 r = robot.Robot1(ma, num_particles)
@@ -49,7 +49,7 @@ for i in range(1, 1001):
     
     intersect = True
     while intersect:
-        ang = random.gauss(0, 1)
+        ang = random.gauss(0, 0.5)
         dist = 1
         intersect, _ = r.motion_model((ang, dist))
     

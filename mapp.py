@@ -164,11 +164,12 @@ class Map:
                         self.is_empty((x, y))):
                     todo.append(((x, y), colour))
     
-    def place_walls(self, num):
+    def place_walls(self, num, length):
         """
         Put walls on the map.
         Inputs:
             num: The number of walls to place.
+            length: The average length of the walls.
         """
         
         # Add walls around the map.
@@ -209,7 +210,7 @@ class Map:
                 y_end = y_start + 0.1*step * math.sin(ang)
                 close = (
                     self.closest_wall((x_end, y_end)) < 1.1 or
-                    random.random() < 0.01
+                    random.random() < 0.1 / length
                 )
             
             # Add the found wall to the list of walls.

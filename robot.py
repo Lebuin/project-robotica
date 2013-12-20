@@ -27,6 +27,9 @@ class Robot:
         self.w_slow = 1
         self.w_fast = 1
         
+        self.alp_dist = 0.5
+        self.w_dist = 10
+        
         self.num_particles = num_particles
         self.particles = []
         
@@ -144,38 +147,54 @@ class Robot:
         # Initialize the temporary particle list with a dummy particle.
         # Elements are of the form ((ang, (x, y)), weight)
         temp = [((0, (0, 0)), 0)]
-        weights = []
         for particle in self.particles:
             _, new_part = self.motion_model(u, particle)
             weight = self.measurement_model(new_part)
             
-            temp.append((new_part, temp[-1][1] + weight, self.mapp.get_coordinate(particle[1])))
-            weights.append(weight)
+            temp.append((new_part, temp[-1][1] + weight, weight))
         
         # Remove the dummy particle and empty the particle list.
         temp.pop(0)
         self.particles = []
-        max_weight = temp[-1][1]
-        self.set_weights(weights)
+        rand_particles = []
+        total_weight = temp[-1][1]
+        self.set_weights(temp)
         
         # Add num_particles new particles to the list, according to the
         # cumulative distribution stored in temp[i][1].
         for i in range(self.num_particles):
-            if random.random() < (1 - self.w_fast/self.w_slow):
-            #if random.random() < (1 - self.w_fast/self.w_slow):
-                particle = self.random_particle()
+            if random.random() < (1 - self.w_fast/self.w_slow/self.w_divider):
+                rand_particles.append(self.random_particle())
                 
             else:
-                selector = random.random() * max_weight
+                selector = random.random() * total_weight
                 
                 # Find the largest temporary particle whose cumulative
                 # weight is smaller than the random selector.
                 k = 0
                 while temp[k][1] < selector:
                     k += 1
-                particle = temp[k][0]
-            
-            self.particles.append(particle)
+                self.particles.append(temp[k][0])
+        
+        # See if the non-random particles are close enough yet.
+        self.w_dist += self.alp_dist * (self.particles_distance() - self.w_dist)
+        self.particles.extend(rand_particles)
+        
+        if self.w_dist < 0.5:
+            return True
+        else:
+            return False
+        
+    
+    def particles_distance(self):
+        """
+        Calculate the average distance of the best portion of the
+        particles to the actual robot position.
+        """
+        
+        avg_num = self.num_particles//5
+        distances = map(lambda p: geom.dist_points(self.coor, p[1]), self.particles)
+        return sum(sorted(distances)[:avg_num])/avg_num
     
     def print(self):
         """
@@ -203,30 +222,36 @@ class Robot1(Robot):
     
     half_measures = 25  # Half of the number of measurements (the total
                         # number must be even to simplify calculations.)
-    max_range = 10  # The maximal measuring distance.
+    min_range = 1   # The minimal and
+    max_range = 10  # maximal measuring distance.
     hit_sigma = 0.2  # See Thrun p. 172. This must be multiplied by
-                      # the distance of the measurement.
+                     # the distance of the measurement.
+    w_divider = 1.5
     
     measurement = []
     
-    def set_weights(self, weights):
+    def set_weights(self, particles):
         """
         Update the moving averages used to determine the number of
         random particles that will be drawn.
         Inputs:
-            weights: A list with the weights of the current particles.
+            particles: A list with the temporary particles:
+                (coordinate, cumulative weight, weight).
         """
         
         w_avg = 1
-        power = 1/(self.num_particles*len(self.measurement))
-        for w in weights:
-            w_avg *= w**power
+        avg_dist = 1
+        power = 1/(len(particles)*len(self.measurement))
+        total_weight = particles[-1][1]
+        for p in particles:
+            w_avg *= p[2]**power
+            avg_dist *= geom.dist_points(self.coor, p[0][1])**(p[2]/total_weight)
         
         self.w_slow += self.alp_slow * (w_avg - self.w_slow)
         self.w_fast += self.alp_fast * (w_avg - self.w_fast)
         
-        print((w_avg, self.w_fast, self.w_slow))
-        print((1 - self.w_fast/self.w_slow))
+        #print((w_avg, self.w_fast, self.w_slow, avg_dist))
+        #print((1 - self.w_fast/self.w_slow/self.w_divider))
     
     def measure(self, state=None):
         """
@@ -353,22 +378,25 @@ class Robot1(Robot):
 class Robot2(Robot):
     
     measurement = 0
+    w_divider = 1
     
-    def set_weights(self, weights):
+    def set_weights(self, particles):
         """
         Update the moving averages used to determine the number of
         random particles that will be drawn.
         Inputs:
-            weights: A list with the weights of the current particles.
+            particles: A list with the temporary particles: 
+                (coordinate, cumulative weight, weight).
         """
         
-        w_avg = sum(weights) / self.num_particles
+        w_avg = 0
+        w_avg = sum([p[2] for p in particles]) / self.num_particles
         
         self.w_slow += self.alp_slow * (w_avg - self.w_slow)
         self.w_fast += self.alp_fast * (w_avg - self.w_fast)
         
-        print((w_avg, self.w_fast, self.w_slow))
-        print((1 - self.w_fast/self.w_slow))
+        #print((w_avg, self.w_fast, self.w_slow))
+        #print((1 - self.w_fast/self.w_slow))
     
     def measure(self, state=None):
         """
