@@ -70,7 +70,7 @@ class Robot:
         
         return geom.dist_point_line(position, wall) < self.size
     
-    def motion_model(self, u, state=None):
+    def motion_model(self, u, state=None, exact=False):
         """
         Calculate the next state for a given state and control.
         Inputs:
@@ -91,8 +91,12 @@ class Robot:
             coor = state[1]
         
         # Calculate the angle and distance under which to move.
-        ang += random.gauss(u[0], self.a_sigma)
-        dist = random.gauss(u[1], u[1] * self.d_sigma)
+        if exact:
+            ang += u[0]
+            dist = u[1]
+        else:
+            ang += random.gauss(u[0], self.a_sigma)
+            dist = random.gauss(u[1], u[1] * self.d_sigma)
         
         # Calculate a step size of at most 0.1, so that the destination
         # will be exactly reached.
@@ -128,7 +132,7 @@ class Robot:
         
         return (intersect, (ang, (x, y)))
     
-    def move(self, ang, dist):
+    def move(self, ang, dist, exact=False):
         """
         Move the robot according to the motion model and update the
         particles.
@@ -140,7 +144,7 @@ class Robot:
         u = (ang, dist)
         
         # Move the robot.
-        _, new_state = self.motion_model(u)
+        _, new_state = self.motion_model(u, exact=exact)
         self.ang, self.coor = new_state
         self.measure()
         

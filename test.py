@@ -51,7 +51,10 @@ for i in range(1, 1001):
     while intersect:
         ang = random.gauss(0, 0.5)
         dist = 1
-        intersect, _ = r.motion_model((ang, dist))
+        intersect, dest = r.motion_model((ang, dist))
     
-    r.move(ang, dist)
+    dist = geom.dist_points(r.coor, dest[1])
+    ang = dest[0] - r.ang
+    print((ang, dist))
+    r.move(ang, dist, exact=True)
     r.draw().save('move-r2/test'+str(i)+'.png')
