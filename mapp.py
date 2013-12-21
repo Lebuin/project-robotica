@@ -183,39 +183,38 @@ class Map:
         # Put num extra walls on the map.
         for i in range(num):
             
-            # Find a start point and angle for the wall so that it can
-            # be at least 1 meter long, while maintaining 1 meter
-            # distance to all other walls.
             close = True
             while close:
-                x_start = random.random() * self.width
-                y_start = random.random() * self.height
+                xc = random.random() * self.width
+                yc = random.random() * self.height
                 ang = random.random() * 2*math.pi
                 
-                x_end = x_start + math.cos(ang)
-                y_end = y_start + math.sin(ang)
+                x1 = xc - 0.5*math.cos(ang)
+                y1 = yc - 0.5*math.sin(ang)
+                x2 = xc + 0.5*math.cos(ang)
+                y2 = yc + 0.5*math.sin(ang)
                 
                 close = (
-                    self.closest_wall((x_start, y_start)) < 1 or
-                    self.closest_wall((x_end, y_end)) < 1
+                    self.closest_wall((x1, y1)) < 1 or
+                    self.closest_wall((x2, y2)) < 1
                 )
-            
-            # Make the wall as long as possible without coming closer
-            # than 1 meter to any other wall.
-            step = 9
+                
+            step = 0
             close = False
             while not close:
                 step += 1
-                x_end = x_start + 0.1*step * math.cos(ang)
-                y_end = y_start + 0.1*step * math.sin(ang)
+                
+                x1 = xc - 0.1*step * math.cos(ang)
+                y1 = yc - 0.1*step * math.sin(ang)
+                x2 = xc + 0.1*step * math.cos(ang)
+                y2 = yc + 0.1*step * math.sin(ang)
+                
                 close = (
-                    self.closest_wall((x_end, y_end)) < 1.1 or
-                    random.random() < 0.1 / length
+                    self.closest_wall((x1, y1)) < 1.3 or
+                    self.closest_wall((x2, y2)) < 1.3
                 )
             
-            # Add the found wall to the list of walls.
-            self.walls.append(((x_start, y_start), (x_end, y_end)))
-        
+            self.walls.append(((x1, y1), (x2, y2)))
     
     def draw(self, floor=True, walls=True, robot=None, particles=None):
         """
