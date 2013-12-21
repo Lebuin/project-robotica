@@ -210,6 +210,9 @@ class Robot:
         # Only use the 20% of the particles with the highest weight.
         particles = sorted(self.particles, key=lambda p: p[1])
         particles = [p[0] for p in particles[:self.num_particles//5]]
+        #particles = self.particles[:]
+        #random.shuffle(particles)
+        #particles = [p[0] for p in particles[:self.num_particles//5]]
         
         # Create a root state with empty angles list and usability
         # factor 0. States always contain
@@ -455,7 +458,7 @@ class Robot1(Robot):
             # distances with these angle-specific averages. Higher is
             # better.
             factor = 0
-            for angle, dists in measurements.items():
+            for dists in measurements.values():
                 dists += [0 for i in range(len(particles) - len(dists))]
                 av = sum(dists) / len(particles)
                 factor += sum([(d - av)**2 for d in dists]) / len(measurements)
