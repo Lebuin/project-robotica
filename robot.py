@@ -151,7 +151,7 @@ class Robot:
         temp = [((0, (0, 0)), 0)]
         for particle in self.particles:
             _, new_part = self.motion_model(u, particle[0])
-            weight = self.measurement_model(new_part)
+            weight = self.measurement_model(new_part, particle[1])
             
             temp.append((new_part, temp[-1][1] + weight, weight))
         
@@ -411,26 +411,23 @@ class Robot2(Robot):
         
         return self.mapp.get_coordinate(coor)
     
-    def measurement_model(self, state=None):
+    def measurement_model(self, particle, old_weight):
         """
         Calculate the probability of a measurement at a location of the
         robot.
         Inputs:
-            state: The location of the robot as a tuple (angle, (x, y)).
+            particle: A tuple (angle, (x, y)).
+            old_weight: the old weight of the particle.
         Output:
             The probability of the measurement.
         """
         
-        # If no state is given, use the current state of the robot.
-        if state is None:
-            coor = self.coor
+        if self.mapp.get_coordinate(particle[1]) == self.measurement:
+            new_weight = 1
         else:
-            coor = state[1]
+            new_weight = 0
         
-        if self.mapp.get_coordinate(coor) == self.measurement:
-            return 1
-        else:
-            return 0.05
+        return 0.1*old_weight + 0.9*new_weight
     
     def random_particle(self):
         """
@@ -442,45 +439,6 @@ class Robot2(Robot):
         y = random.random() * self.mapp.height
         ang = random.random() * 2*math.pi
         return (ang, (x, y))
-    
-    '''def autonome_move(self):
-        
-        angles = 20
-        favourite = float('inf')
-        fav_angle = 0
-        particles = sorted(self.particles, key=lambda p: p[1])
-        particles = particles[:int(self.num_particles/5)]
-        
-        for i in range(angles):
-            angle = i/angles * 2*math.pi
-            u = (angle, 1)
-            
-            count = {}
-            #measurements = []
-            for p in particles:
-                _, new_part = self.motion_model(u, p[0], exact=True)
-                meas = self.measure(state=new_part)
-                if not meas in count:
-                    count[meas] = 1
-                else:
-                    count[meas] += 1
-                #measurements.append(meas)
-            
-            ''cnt = {}
-            for m in measurements:
-                if not m in cnt:
-                    cnt[m] = 1
-                else:
-                    cnt[m] += 1''
-            #print(count)
-            #print(cnt)
-            factor = sum([c**2 for c in count.values()])
-            if factor < favourite:
-                favourite = factor
-                fav_angle = angle
-        print('')
-        print(fav_angle)
-        return self.move(fav_angle, 1)'''
     
     def autonome_move(self):
         
@@ -501,13 +459,13 @@ class Robot2(Robot):
         return self.move(angle, 1)
     
     def new_states(self, state):
-        angles = 5
+        #angles = [i/angles * 2*math.pi for i in range(5)]
+        angles = [0, math.pi/6, -math.pi/6, math.pi/3, -math.pi/3, 3*math.pi/4, -3*math.pi/4]
         fav = {}
         particles = state[2]
         new_states = []
         
-        for i in range(angles):
-            angle = i/angles * 2*math.pi
+        for angle in angles:
             u = (angle, 1)
             new_particles = []
             
