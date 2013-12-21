@@ -15,8 +15,7 @@ resolution = 0.1
 
 num_areas = 100
 num_colours = 10
-num_walls = 8
-len_walls = 50
+num_walls = 10
 
 num_particles = 100
 
@@ -28,7 +27,7 @@ if os.path.exists(path):
 else:
     ma.fill_floor(num_areas, num_colours)
     ma.save(path)
-ma.place_walls(num_walls, len_walls)
+ma.place_walls(num_walls)
 
 # Initialize the robots and find a good starting point for them.
 r = robot.Robot1(ma, num_particles)
