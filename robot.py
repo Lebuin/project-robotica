@@ -443,29 +443,89 @@ class Robot2(Robot):
         ang = random.random() * 2*math.pi
         return (ang, (x, y))
     
-    def autonome_move(self):
+    '''def autonome_move(self):
         
         angles = 20
         favourite = float('inf')
         fav_angle = 0
+        particles = sorted(self.particles, key=lambda p: p[1])
+        particles = particles[:int(self.num_particles/5)]
+        
         for i in range(angles):
             angle = i/angles * 2*math.pi
             u = (angle, 1)
-            measurements = []
-            for p in self.particles:
-                _, new_part = self.motion_model(u, p[0], exact=True)
-                measurements.append(self.measure(state=new_part))
             
-            cnt = {}
+            count = {}
+            #measurements = []
+            for p in particles:
+                _, new_part = self.motion_model(u, p[0], exact=True)
+                meas = self.measure(state=new_part)
+                if not meas in count:
+                    count[meas] = 1
+                else:
+                    count[meas] += 1
+                #measurements.append(meas)
+            
+            ''cnt = {}
             for m in measurements:
                 if not m in cnt:
                     cnt[m] = 1
                 else:
-                    cnt[m] += 1
-            
-            factor = sum([c**2 for c in cnt.values()])
+                    cnt[m] += 1''
+            #print(count)
+            #print(cnt)
+            factor = sum([c**2 for c in count.values()])
             if factor < favourite:
                 favourite = factor
                 fav_angle = angle
+        print('')
+        print(fav_angle)
+        return self.move(fav_angle, 1)'''
+    
+    def autonome_move(self):
         
-        return self.move(fav_angle, 1)
+        particles = sorted(self.particles, key=lambda p: p[1])
+        particles = [p[0] for p in particles[:self.num_particles//5]]
+        
+        states = [([], 0, particles)] # (angles, factor, particles)
+        depth = 5
+        
+        for i in range(depth):
+            states = states[:3]
+            new_states = []
+            for state in states:
+                new_states.extend(self.new_states(state))
+            states = sorted(new_states, key=lambda s: s[1])
+        
+        angle = states[0][0][0]
+        return self.move(angle, 1)
+    
+    def new_states(self, state):
+        angles = 5
+        fav = {}
+        particles = state[2]
+        new_states = []
+        
+        for i in range(angles):
+            angle = i/angles * 2*math.pi
+            u = (angle, 1)
+            new_particles = []
+            
+            count = {}
+            for p in particles:
+                _, new_part = self.motion_model(u, p, exact=True)
+                new_particles.append(new_part)
+                meas = self.measure(state=new_part)
+                if not meas in count:
+                    count[meas] = 1
+                else:
+                    count[meas] += 1
+            
+            factor = sum([c**2 for c in count.values()])
+            new_states.append((
+                state[0]+[angle],
+                state[1]+factor,
+                new_particles
+            ))
+        
+        return new_states
