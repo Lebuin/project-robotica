@@ -8,7 +8,7 @@ import mapp
 import robot
 import geom
 
-def test_case(name, iterations, map_size, resolution, num_areas, num_colours, num_walls, len_walls, num_particles):
+def test_case(name, iterations, map_size, resolution, num_areas, num_colours, num_walls, num_particles):
     
     data = []
     
@@ -18,7 +18,7 @@ def test_case(name, iterations, map_size, resolution, num_areas, num_colours, nu
         # Generate a map.
         ma = mapp.Map(map_size, map_size, resolution)
         ma.fill_floor(num_areas, num_colours)
-        ma.place_walls(num_walls, len_walls)
+        ma.place_walls(num_walls)
         
         # Find a good starting point for the robots.
         r1 = robot.Robot1(ma, num_particles)
@@ -39,13 +39,10 @@ def test_case(name, iterations, map_size, resolution, num_areas, num_colours, nu
         time2 = 0
         j = 0
         while not (time1 and time2):
-            #r1.draw().save('move-r1/test'+str(j)+'.png')
-            #r2.draw().save('move-r2/test'+str(j)+'.png')
-            
             j += 1
             
             # Choose the robot that wil be used to find a good control.
-            if time2 > 0:
+            if time1 == 0:
                 r = r1
             else:
                 r = r2
@@ -91,9 +88,7 @@ resolution = 0.1
 
 areas = [100, 70, 130, 160, 200]
 colours = [10, 7, 15]
-
 walls = [10, 7, 15]
-length = [10, 8, 13, 15, 20]
 
 particles = [100, 50, 70, 140, 190]
 iterations = 30
@@ -106,7 +101,8 @@ test = {
     'map_size': False,
     'num_areas': False,
     'num_colours': False,
-    'num_walls': False
+    'num_walls': False,
+    'num_particles': False
 }
 
 draw = {
@@ -114,13 +110,14 @@ draw = {
     'map_size': True,
     'num_areas': True,
     'num_colours': True,
-    'num_walls': True
+    'num_walls': True,
+    'num_particles': True
 }
 
 # Test the base case.
 name = 'base_case'
 if test[name]:
-    data = test_case(name, iterations, size[0], resolution, areas[0], colours[0], walls[0], length[0], particles[0])
+    data = test_case(name, iterations, size[0], resolution, areas[0], colours[0], walls[0], particles[0])
     output_data(data_path+name, data)
 
 # Variable map size.
@@ -128,7 +125,7 @@ name = 'map_size'
 if test[name]:
     for i in range(1, len(size)):
         n = name+str(size[i])
-        data = test_case(n, iterations, size[i], resolution, areas[0], colours[0], walls[0], length[0], particles[0])
+        data = test_case(n, iterations, size[i], resolution, areas[0], colours[0], walls[0], particles[0])
         output_data(data_path+n, data)
 
 # Variable number of areas.
@@ -136,7 +133,7 @@ name = 'num_areas'
 if test[name]:
     for i in range(1, len(areas)):
         n = name+str(areas[i])
-        data = test_case(n, iterations, size[0], resolution, areas[i], colours[0], walls[0], length[0], particles[0])
+        data = test_case(n, iterations, size[0], resolution, areas[i], colours[0], walls[0], particles[0])
         output_data(data_path+n, data)
 
 # Variable number of colours.
@@ -144,7 +141,7 @@ name = 'num_colours'
 if test[name]:
     for i in range(1, len(colours)):
         n = name+str(colours[i])
-        data = test_case(n, iterations, size[0], resolution, areas[0], colours[i], walls[0], length[0], particles[0])
+        data = test_case(n, iterations, size[0], resolution, areas[0], colours[i], walls[0], particles[0])
         output_data(data_path+n, data)
 
 # Variable number of walls.
@@ -152,5 +149,13 @@ name = 'num_walls'
 if test[name]:
     for i in range(1, len(walls)):
         n = name+str(walls[i])
-        data = test_case(n, iterations, size[0], resolution, areas[0], colours[0], walls[i], length[0], particles[0])
+        data = test_case(n, iterations, size[0], resolution, areas[0], colours[0], walls[i], particles[0])
+        output_data(data_path+n, data)
+
+# Variable number of particles.
+name = 'num_particles'
+if test[name]:
+    for i in range(1, len(walls)):
+        n = name+str(walls[i])
+        data = test_case(n, iterations, size[0], resolution, areas[0], colours[0], walls[0], particles[i])
         output_data(data_path+n, data)

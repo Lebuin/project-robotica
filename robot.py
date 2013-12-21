@@ -436,4 +436,4 @@ class Robot2(Robot):
         y = random.random() * self.mapp.height
         ang = random.random() * 2*math.pi
         return (ang, (x, y))
-        
+    
