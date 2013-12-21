@@ -228,7 +228,7 @@ class Robot1(Robot):
                         # number must be even to simplify calculations.)
     min_range = -10   # The minimal and
     max_range = 10  # maximal measuring distance.
-    hit_sigma = 0.2  # See Thrun p. 172.
+    hit_sigma = 0.3 # See Thrun p. 172.
     w_divider = 1.5
     
     measurement = []
@@ -242,13 +242,11 @@ class Robot1(Robot):
                 (coordinate, cumulative weight, weight).
         """
         
-        w_avg = 1
-        avg_dist = 1
+        w_avg = 0
         power = 1/(len(particles)*len(self.measurement))
         total_weight = particles[-1][1]
         for p in particles:
-            w_avg *= p[2]**power
-            avg_dist *= geom.dist_points(self.coor, p[0][1])**(p[2]/total_weight)
+            w_avg += p[2]**(1/len(self.measurement)) / len(particles)
         
         self.w_slow += self.alp_slow * (w_avg - self.w_slow)
         self.w_fast += self.alp_fast * (w_avg - self.w_fast)

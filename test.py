@@ -15,8 +15,8 @@ resolution = 0.1
 
 num_areas = 100
 num_colours = 10
-num_walls = 10
-len_walls = 15
+num_walls = 8
+len_walls = 50
 
 num_particles = 100
 
@@ -44,7 +44,10 @@ r.put(ang, (x, y))
 
 # Move the robot around.
 r.draw().save('test_move/0.png')
-for i in range(1, 1001):
+found = False
+i = 0
+while not found:
+    i += 1
     print(i)
     
     intersect = True
@@ -55,5 +58,5 @@ for i in range(1, 1001):
     
     dist = geom.dist_points(r.coor, dest[1])
     ang = dest[0] - r.ang
-    r.move(ang, dist, exact=True)
+    found = r.move(ang, dist, exact=True)
     r.draw().save('test_move/'+str(i)+'.png')
