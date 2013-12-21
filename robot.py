@@ -226,10 +226,9 @@ class Robot1(Robot):
     
     half_measures = 25  # Half of the number of measurements (the total
                         # number must be even to simplify calculations.)
-    min_range = 1   # The minimal and
+    min_range = -10   # The minimal and
     max_range = 10  # maximal measuring distance.
-    hit_sigma = 0.2 # See Thrun p. 172. This must be multiplied by
-                     # the distance of the measurement.
+    hit_sigma = 0.2  # See Thrun p. 172.
     w_divider = 1.5
     
     measurement = []

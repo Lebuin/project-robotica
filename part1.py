@@ -98,14 +98,23 @@ length = [10, 8, 13, 15, 20]
 particles = [100, 50, 70, 140, 190]
 iterations = 30
 
-data_path = 'test_data/'
+data_path = 'part1_data/'
+draw_path = 'part1_draw/'
 
 test = {
-    'base_case': True,
-    'map_size': True,
+    'base_case': False,
+    'map_size': False,
     'num_areas': False,
     'num_colours': False,
     'num_walls': False
+}
+
+draw = {
+    'base_case': True,
+    'map_size': True,
+    'num_areas': True,
+    'num_colours': True,
+    'num_walls': True
 }
 
 # Test the base case.
