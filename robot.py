@@ -38,10 +38,20 @@ class Robot:
         
         # Draw num_particles random particles inside the map.
         for i in range(self.num_particles):
-            ang = random.random() * 2*math.pi
+            self.particles.append((self.random_particle(), 0))
+            '''ang = random.random() * 2*math.pi
             x = random.random() * mapp.width
             y = random.random() * mapp.height
-            self.particles.append(((ang, (x, y)), 0))
+            self.particles.append(((ang, (x, y)), 0))'''
+    
+    def random_particle(self):
+        close = True
+        while close:
+            x = random.random() * self.mapp.width
+            y = random.random() * self.mapp.height
+            close = self.mapp.closest_wall((x, y)) < self.size
+        ang = random.random() * 2*math.pi
+        return (ang, (x, y))
     
     def put(self, ang, coor):
         """
@@ -137,6 +147,9 @@ class Robot:
         Inputs:
             ang: The angle over which to rotate the robot.
             dist: The distance over which to move the robot.
+        Output:
+            True if the particles approximate the robot pose good
+            enough.
         """
         
         u = (ang, dist)
@@ -325,26 +338,19 @@ class Robot1(Robot):
         
         return measurement
     
-    def measurement_model(self, state=None):
+    def measurement_model(self, particle, old_weight):
         """
-        Calculate the probability of a given range scan for a robot
-        location.
+        Calculate the probability of a measurement at a location of the
+        robot.
         Inputs:
-            state: A tuple of the form (angle, (x, y)) describing the
-                robot location.
+            particle: A tuple (angle, (x, y)).
+            old_weight: the old weight of the particle.
         Output:
-            The probability of the scan.
+            The probability of the measurement.
         """
         
-        # If no state is given, use the current state of the robot.
-        if state is None:
-            ang = self.ang
-            coor = self.coor
-        else:
-            ang = state[0]
-            coor = state[1]
-        
-        prob = 1
+        ang, coor = particle
+        new_weight = 1
         sqrt2pi = math.sqrt(2*math.pi)  # Repeatedly used constant
         
         # Calculate the probability of each measurement and multiply
@@ -357,23 +363,11 @@ class Robot1(Robot):
             # Multiply the total measurement probability by the 
             # probability of this measurement, using a Gauss function
             # with mean 0 and std dev hit_sigma.
-            p = math.exp(-d**2 / (2*self.hit_sigma**2)) / (self.hit_sigma*sqrt2pi) + 0.01
+            w = math.exp(-d**2 / (2*self.hit_sigma**2)) / (self.hit_sigma*sqrt2pi) + 0.01
             
-            prob *= p
-            
-        return prob
-    
-    def random_particle(self):
-        """
-        Draw a random particle on the map. Currently this is really
-        random, but this could be made better by using information on
-        the map.
-        """
+            new_weight *= w
         
-        x = random.random() * self.mapp.width
-        y = random.random() * self.mapp.height
-        ang = random.random() * 2*math.pi
-        return (ang, (x, y))
+        return new_weight
 
 
 class Robot2(Robot):
@@ -429,46 +423,71 @@ class Robot2(Robot):
         
         return 0.1*old_weight + 0.9*new_weight
     
-    def random_particle(self):
-        """
-        Draw a random particle on the map. Currently this is really
-        random, but this could be made better by using information on
-        the map.
-        """
-        x = random.random() * self.mapp.width
-        y = random.random() * self.mapp.height
-        ang = random.random() * 2*math.pi
-        return (ang, (x, y))
-    
     def autonome_move(self):
+        """
+        Find out an optimal direction to move in, and perform the move.
+        Output:
+            True if the particles approximate the robot pose good
+            enough.
+        """
         
+        # Only use the 20% of the particles with the highest weight.
         particles = sorted(self.particles, key=lambda p: p[1])
         particles = [p[0] for p in particles[:self.num_particles//5]]
         
-        states = [([], 0, particles)] # (angles, factor, particles)
+        # Create a root state with usability factor 0. See the docstring
+        # for self.new_states() for a full explanation.
+        states = [([], 0, particles)]
         depth = 5
         
+        # Go depth steps deep to find the best direction under which to
+        # move the robot.
         for i in range(depth):
+            # Only preserve the 3 best states to speed up calculations.
             states = states[:3]
             new_states = []
+            
+            # Calculate all the children states for the preserved
+            # states and add them to a new list of states. Sort the list
+            # based on the usability factor.
             for state in states:
                 new_states.extend(self.new_states(state))
             states = sorted(new_states, key=lambda s: s[1])
         
+        # Take the best angle from the list and perform the actual move.
         angle = states[0][0][0]
         return self.move(angle, 1)
     
     def new_states(self, state):
-        #angles = [i/angles * 2*math.pi for i in range(5)]
+        """
+        This function is used by self.autonome_move(). Given a set of
+        particles, determine what the best directions are in order to
+        find the robot pose.
+        Inputs:
+            state: A tuple containing:
+                - A list with previously found angles. This is not used
+                  this function.
+                - The usability factor of the state. The usability
+                  factors for next states will be added to this when
+                  forming a new state.
+                - A list of particles that must be used to find the best
+                  directions. Particles are of the form (angle, (x, y)).
+        Output:
+            A new state of the form described above.
+        """
+        
         angles = [0, math.pi/6, -math.pi/6, math.pi/3, -math.pi/3, 3*math.pi/4, -3*math.pi/4]
         fav = {}
         particles = state[2]
         new_states = []
         
+        # Loop through the list of angles that must be examined.
         for angle in angles:
             u = (angle, 1)
             new_particles = []
             
+            # Calculate the next pose for all particles, and measure at
+            # the same time.
             count = {}
             for p in particles:
                 _, new_part = self.motion_model(u, p, exact=True)
@@ -479,7 +498,12 @@ class Robot2(Robot):
                 else:
                     count[meas] += 1
             
+            # Calculate the usability factor. This is the sum of the
+            # squares of the frequency of the floor colours measured by
+            # the different particles.
             factor = sum([c**2 for c in count.values()])
+            
+            # Add a state to the list of new states.
             new_states.append((
                 state[0]+[angle],
                 state[1]+factor,

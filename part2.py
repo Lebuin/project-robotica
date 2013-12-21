@@ -55,7 +55,7 @@ def test_case(name, iterations, map_size, resolution, num_areas, num_colours, nu
         time2a = 0
         time2b = 0
         j = 0
-        while not (time1a and time1b < 0 and time2a and time2b):
+        while not (time1a and time1b and time2a and time2b):
             r2a.draw().save('test_move/r2a/'+str(j)+'.png')
             r2b.draw().save('test_move/r2b/'+str(j)+'.png')
             
@@ -88,7 +88,7 @@ def test_case(name, iterations, map_size, resolution, num_areas, num_colours, nu
             # Move the self controlled robots.
             if time1b == 0 and r1b.autonome_move():
                 time1b = j
-            if time2b >= 0 and r2b.autonome_move():
+            if time2b == 0 and r2b.autonome_move():
                 time2b = j
             
             print(
