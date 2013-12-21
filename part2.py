@@ -50,12 +50,15 @@ def test_case(name, iterations, map_size, resolution, num_areas, num_colours, nu
         r2b.put(ang, (x, y))
         
         # Move the robots until they have found their own location.
-        time1a = 0
-        time1b = 0
+        time1a = 1
+        time1b = 1
         time2a = 0
         time2b = 0
         j = 0
         while not (time1a and time1b and time2a and time2b):
+            r2a.draw().save('test_move/r2a/'+str(j)+'.png')
+            r2b.draw().save('test_move/r2b/'+str(j)+'.png')
+            
             j += 1
             
             # Move the random robots:
@@ -65,7 +68,7 @@ def test_case(name, iterations, map_size, resolution, num_areas, num_colours, nu
                 if time1a == 0:
                     r = r1a
                 else:
-                    r : r2a
+                    r = r2a
                 
                 # Find a control so that the robots won't hit a wall.
                 intersect = True
@@ -98,7 +101,7 @@ def test_case(name, iterations, map_size, resolution, num_areas, num_colours, nu
                 end=''
             )
         
-        data.append((time1, time2))
+        data.append((time1a, time1b, time2a, time2b))
         print('')
     
     return data

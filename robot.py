@@ -29,6 +29,7 @@ class Robot:
         
         self.alp_dist = 0.5
         self.w_dist = 10
+        self.alp_part = 0.5
         
         self.num_particles = num_particles
         self.particles = []
@@ -37,13 +38,10 @@ class Robot:
         
         # Draw num_particles random particles inside the map.
         for i in range(self.num_particles):
-            self.particles.append((
-                random.random() * 2*math.pi,
-                (
-                    random.random() * mapp.width,
-                    random.random() * mapp.height
-                )
-            ))
+            ang = random.random() * 2*math.pi
+            x = random.random() * mapp.width
+            y = random.random() * mapp.height
+            self.particles.append(((ang, (x, y)), 0))
     
     def put(self, ang, coor):
         """
@@ -146,13 +144,13 @@ class Robot:
         # Move the robot.
         _, new_state = self.motion_model(u, exact=exact)
         self.ang, self.coor = new_state
-        self.measure()
+        self.measurement = self.measure()
         
         # Initialize the temporary particle list with a dummy particle.
         # Elements are of the form ((ang, (x, y)), weight)
         temp = [((0, (0, 0)), 0)]
         for particle in self.particles:
-            _, new_part = self.motion_model(u, particle)
+            _, new_part = self.motion_model(u, particle[0])
             weight = self.measurement_model(new_part)
             
             temp.append((new_part, temp[-1][1] + weight, weight))
@@ -168,8 +166,7 @@ class Robot:
         # cumulative distribution stored in temp[i][1].
         for i in range(self.num_particles):
             if random.random() < (1 - self.w_fast/self.w_slow/self.w_divider):
-                rand_particles.append(self.random_particle())
-                
+                rand_particles.append((self.random_particle(), 0))
             else:
                 selector = random.random() * total_weight
                 
@@ -178,7 +175,7 @@ class Robot:
                 k = 0
                 while temp[k][1] < selector:
                     k += 1
-                self.particles.append(temp[k][0])
+                self.particles.append((temp[k][0], temp[k][2]))
         
         # See if the non-random particles are close enough yet.
         self.w_dist += self.alp_dist * (self.particles_distance() - self.w_dist)
@@ -197,7 +194,7 @@ class Robot:
         """
         
         avg_num = self.num_particles//5
-        distances = map(lambda p: geom.dist_points(self.coor, p[1]), self.particles)
+        distances = [geom.dist_points(self.coor, p[0][1]) for p in self.particles]
         return sum(sorted(distances)[:avg_num])/avg_num
     
     def print(self):
@@ -218,7 +215,7 @@ class Robot:
         
         return self.mapp.draw(
             robot=self.coor,
-            particles=self.particles
+            particles=[p[0] for p in self.particles]
         )
 
 
@@ -251,12 +248,14 @@ class Robot1(Robot):
         self.w_slow += self.alp_slow * (w_avg - self.w_slow)
         self.w_fast += self.alp_fast * (w_avg - self.w_fast)
     
-    def measure(self, state=None):
+    def measure(self, state=None, exact=False):
         """
         Do a range scan around a location on the map.
         Inputs:
             state: A tuple of the form (angle, (x, y)) describing the
                 robot location.
+            exact: A boolean describing wether or not to incorporate
+                noise in the measurements.
         Output:
             An array with at most half_measures*2 measurements.
             Measurements are of the form (relative angle, distance) and
@@ -271,12 +270,15 @@ class Robot1(Robot):
             ang = state[0]
             coor = state[1]
         
-        self.measurement = []
+        measurement = []
         
         # Do range_resolution measurements at uniform angles.
         for i in range(self.half_measures):
             theta = math.pi * i / self.half_measures
-            real_angle = random.gauss(ang + theta, self.a_sigma)
+            if exact:
+                real_angle = ang + theta
+            else:
+                real_angle = random.gauss(ang + theta, self.a_sigma)
             beam = (
                 coor, (
                     coor[0] + math.cos(real_angle),
@@ -306,18 +308,22 @@ class Robot1(Robot):
             
             # Add a noised version of both measurements to the list if
             # they are valid.
-            pos_dist += random.gauss(0, self.d_sigma * pos_dist)
-            neg_dist += random.gauss(0, self.d_sigma * neg_dist)
-            if pos_dist > 0.5 and pos_dist < self.max_range:
-                self.measurement.append((
+            if not exact:
+                pos_dist += random.gauss(0, self.d_sigma * pos_dist)
+                neg_dist += random.gauss(0, self.d_sigma * neg_dist)
+            
+            if pos_dist > self.min_range and pos_dist < self.max_range:
+                measurement.append((
                     theta,
                     random.gauss(pos_dist, self.d_sigma * pos_dist)
                 ))
-            if neg_dist < -0.5 and neg_dist > -self.max_range:
-                self.measurement.append((
+            if neg_dist < -self.min_range and neg_dist > -self.max_range:
+                measurement.append((
                     theta - math.pi,
                     random.gauss(-neg_dist, self.d_sigma * pos_dist)
                 ))
+        
+        return measurement
     
     def measurement_model(self, state=None):
         """
@@ -403,7 +409,7 @@ class Robot2(Robot):
         else:
             coor = state[1]
         
-        self.measurement = self.mapp.get_coordinate(coor)
+        return self.mapp.get_coordinate(coor)
     
     def measurement_model(self, state=None):
         """
@@ -437,3 +443,29 @@ class Robot2(Robot):
         ang = random.random() * 2*math.pi
         return (ang, (x, y))
     
+    def autonome_move(self):
+        
+        angles = 20
+        favourite = float('inf')
+        fav_angle = 0
+        for i in range(angles):
+            angle = i/angles * 2*math.pi
+            u = (angle, 1)
+            measurements = []
+            for p in self.particles:
+                _, new_part = self.motion_model(u, p[0], exact=True)
+                measurements.append(self.measure(state=new_part))
+            
+            cnt = {}
+            for m in measurements:
+                if not m in cnt:
+                    cnt[m] = 1
+                else:
+                    cnt[m] += 1
+            
+            factor = sum([c**2 for c in cnt.values()])
+            if factor < favourite:
+                favourite = factor
+                fav_angle = angle
+        
+        return self.move(fav_angle, 1)
