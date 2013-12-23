@@ -27,9 +27,8 @@ class Robot:
         self.w_slow = 1
         self.w_fast = 1
         
-        self.alp_dist = 0.5
+        self.alp_dist = 0.3
         self.w_dist = 10
-        self.alp_part = 0.5
         
         self.num_particles = num_particles
         self.particles = []
@@ -39,10 +38,6 @@ class Robot:
         # Draw num_particles random particles inside the map.
         for i in range(self.num_particles):
             self.particles.append((self.random_particle(), 0))
-            '''ang = random.random() * 2*math.pi
-            x = random.random() * mapp.width
-            y = random.random() * mapp.height
-            self.particles.append(((ang, (x, y)), 0))'''
     
     def random_particle(self):
         close = True
@@ -284,7 +279,8 @@ class Robot1(Robot):
         
         measurement = []
         
-        # Do range_resolution measurements at uniform angles.
+        # Do range_resolution measurements angles with uniform
+        # differences.
         for i in range(self.half_measures):
             theta = math.pi * i / self.half_measures
             if exact:
@@ -378,7 +374,6 @@ class Robot1(Robot):
         # Only use the 10% of the particles with the highest weight.
         particles = sorted(self.particles, key=lambda p: p[1], reverse=True)
         particles = [p[0] for p in particles[:5]]
-        print('\n'+str(particles))
         
         measurements = []
         for p in particles:
@@ -408,7 +403,6 @@ class Robot1(Robot):
             for state in states:
                 new_states.extend(self.new_states(state, measurements))
             states = sorted(new_states, key=lambda s: s[1], reverse=True)
-            print([(s[0], s[1]) for s in states])
         
         # Take the best angle (the one with the highest factor) from the
         # list and perform the actual move.
@@ -528,7 +522,7 @@ class Robot2(Robot):
         """
         
         # Only use the 20% of the particles with the highest weight.
-        particles = sorted(self.particles, key=lambda p: p[1])
+        particles = sorted(self.particles, key=lambda p: p[1], reverse=True)
         particles = [p[0] for p in particles[:self.num_particles//5]]
         
         # Create a root state with empty angles list and usability
@@ -538,7 +532,7 @@ class Robot2(Robot):
         #   - A list of particles that must be used to find the best
         #     directions. Particles are of the form (angle, (x, y)).
         states = [([], 0, particles)]
-        depth = 5
+        depth = 4
         
         # Go depth steps deep to find the best direction under which to
         # move the robot.
@@ -577,6 +571,7 @@ class Robot2(Robot):
             math.pi/3, -math.pi/3,
             3*math.pi/4, -3*math.pi/4
         ]
+        angles = [i/5 * math.pi for i in range(-2, 3)]
         fav = {}
         particles = state[2]
         new_states = []
