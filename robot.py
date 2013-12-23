@@ -377,11 +377,13 @@ class Robot1(Robot):
         
         # Only use the 10% of the particles with the highest weight.
         particles = sorted(self.particles, key=lambda p: p[1], reverse=True)
-        particles = [p[0] for p in particles[:self.num_particles//10]]
+        particles = [p[0] for p in particles[:5]]
+        print('\n'+str(particles))
         
         measurements = []
         for p in particles:
-            measurements.append(self.measure(state=p, exact=True))
+            state = (0, p[1])
+            measurements.append(self.measure(state=state, exact=True))
         
         # Create a root state with empty angles list and usability
         # factor 0. States always contain
@@ -406,6 +408,7 @@ class Robot1(Robot):
             for state in states:
                 new_states.extend(self.new_states(state, measurements))
             states = sorted(new_states, key=lambda s: s[1], reverse=True)
+            print([(s[0], s[1]) for s in states])
         
         # Take the best angle (the one with the highest factor) from the
         # list and perform the actual move.
@@ -436,31 +439,6 @@ class Robot1(Robot):
             u = (angle, 1)
             new_particles = []
             
-            '''# Calculate the next pose for all particles, and measure at
-            # the same time.
-            measurements = {}
-            for p in particles:
-                _, new_part = self.motion_model(u, p, exact=True)
-                new_particles.append(new_part)
-                measurement = self.measure(state=new_part, exact=True)
-                for m in measurement:
-                    if m[0] not in measurements:
-                        measurements[m[0]] = [m[1]]
-                    else:
-                        measurements[m[0]].append(m[1])
-            
-            # Calculate the usability factor. For every angle, the
-            # average distance of the particle measurements is
-            # calculated. The usability factor is defined as the average
-            # of the sums of the squares of the differences of the
-            # distances with these angle-specific averages. Higher is
-            # better.
-            factor = 0
-            for dists in measurements.values():
-                dists += [0 for i in range(len(particles) - len(dists))]
-                av = sum(dists) / len(particles)
-                factor += sum([(d - av)**2 for d in dists]) / len(measurements)'''
-            
             # Calculate the next pose for all particles. Measure at the
             # new pose and calculate the difference of this measurement
             # with the measurement of the corresponding root particle.
@@ -468,9 +446,9 @@ class Robot1(Robot):
             factor = 0
             for i in range(len(particles)):
                 _, new_part = self.motion_model(u, particles[i], exact=True)
-                new_part = (new_part[0] - angle, new_part[1])
                 new_particles.append(new_part)
-                measurement = self.measure(state=new_part, exact=True)
+                new_state = (0, new_part[1])
+                measurement = self.measure(state=new_state, exact=True)
                 
                 avg_diff = 0
                 for m in range(2*self.half_measures):
