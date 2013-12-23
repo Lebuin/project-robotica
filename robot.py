@@ -199,48 +199,6 @@ class Robot:
         else:
             return False
     
-    def autonome_move(self):
-        """
-        Find out an optimal direction to move in, and perform the move.
-        Output:
-            True if the particles approximate the robot pose good
-            enough.
-        """
-        
-        # Only use the 20% of the particles with the highest weight.
-        particles = sorted(self.particles, key=lambda p: p[1])
-        particles = [p[0] for p in particles[:self.num_particles//5]]
-        #particles = self.particles[:]
-        #random.shuffle(particles)
-        #particles = [p[0] for p in particles[:self.num_particles//5]]
-        
-        # Create a root state with empty angles list and usability
-        # factor 0. States always contain
-        #   - A list with previously found angles.
-        #   - The usability factor of the state.
-        #   - A list of particles that must be used to find the best
-        #     directions. Particles are of the form (angle, (x, y)).
-        states = [([], 0, particles)]
-        depth = 5
-        
-        # Go depth steps deep to find the best direction under which to
-        # move the robot.
-        for i in range(depth):
-            # Only preserve the 3 best states to speed up calculations.
-            states = states[:3]
-            new_states = []
-            
-            # Calculate all the children states for the preserved
-            # states and add them to a new list of states. Sort the list
-            # based on the usability factor.
-            for state in states:
-                new_states.extend(self.new_states(state))
-            states = sorted(new_states, key=lambda s: s[1])
-        
-        # Take the best angle from the list and perform the actual move.
-        angle = states[0][0][0]
-        return self.move(angle, 1)
-    
     def particles_distance(self):
         """
         Calculate the average distance of the best portion of the
@@ -366,16 +324,14 @@ class Robot1(Robot):
                 pos_dist += random.gauss(0, self.d_sigma * pos_dist)
                 neg_dist += random.gauss(0, self.d_sigma * neg_dist)
             
-            if pos_dist > self.min_range and pos_dist < self.max_range:
-                measurement.append((
-                    theta,
-                    random.gauss(pos_dist, self.d_sigma * pos_dist)
-                ))
-            if neg_dist < -self.min_range and neg_dist > -self.max_range:
-                measurement.append((
-                    theta - math.pi,
-                    random.gauss(-neg_dist, self.d_sigma * pos_dist)
-                ))
+            measurement.append((
+                theta,
+                min(self.max_range, pos_dist)
+            ))
+            measurement.append((
+                theta - math.pi,
+                min(self.max_range, -neg_dist)
+            ))
         
         return measurement
     
@@ -397,20 +353,66 @@ class Robot1(Robot):
         # Calculate the probability of each measurement and multiply
         # them in prob.
         for meas in self.measurement:
-            x = coor[0] + meas[1] * math.cos(ang + meas[0])
-            y = coor[1] + meas[1] * math.sin(ang + meas[0])
-            d = self.mapp.closest_wall((x, y))
-            
-            # Multiply the total measurement probability by the 
-            # probability of this measurement, using a Gauss function
-            # with mean 0 and std dev hit_sigma.
-            w = math.exp(-d**2 / (2*self.hit_sigma**2)) / (self.hit_sigma*sqrt2pi) + 0.01
-            
-            new_weight *= w
+            if meas[1] != self.max_range:
+                x = coor[0] + meas[1] * math.cos(ang + meas[0])
+                y = coor[1] + meas[1] * math.sin(ang + meas[0])
+                d = self.mapp.closest_wall((x, y))
+                
+                # Multiply the total measurement probability by the 
+                # probability of this measurement, using a Gauss function
+                # with mean 0 and std dev hit_sigma.
+                w = math.exp(-d**2 / (2*self.hit_sigma**2)) / (self.hit_sigma*sqrt2pi) + 0.01
+                
+                new_weight *= w
         
         return new_weight
+    
+    def autonome_move(self):
+        """
+        Find out an optimal direction to move in, and perform the move.
+        Output:
+            True if the particles approximate the robot pose good
+            enough.
+        """
         
-    def new_states(self, state):
+        # Only use the 10% of the particles with the highest weight.
+        particles = sorted(self.particles, key=lambda p: p[1], reverse=True)
+        particles = [p[0] for p in particles[:self.num_particles//10]]
+        
+        measurements = []
+        for p in particles:
+            measurements.append(self.measure(state=p, exact=True))
+        
+        # Create a root state with empty angles list and usability
+        # factor 0. States always contain
+        #   - A list with angles in which to rotate and move in order
+        #     to reach the state.
+        #   - The usability factor of the state.
+        #   - A list of particles that must be used to find the best
+        #     directions. Particles are of the form (angle, (x, y)).
+        states = [([], 0, particles)]
+        depth = 3
+        
+        # Go depth steps deep to find the best direction under which to
+        # move the robot.
+        for i in range(depth):
+            # Only preserve the 3 best states to speed up calculations.
+            states = states[:3]
+            new_states = []
+            
+            # Calculate all the children states for the preserved
+            # states and add them to a new list of states. Sort the list
+            # based on the usability factor.
+            for state in states:
+                new_states.extend(self.new_states(state, measurements))
+            states = sorted(new_states, key=lambda s: s[1], reverse=True)
+        
+        # Take the best angle (the one with the highest factor) from the
+        # list and perform the actual move.
+        angle = states[0][0][0]
+        return self.move(angle, 1)
+    
+    def new_states(self, state, measurements):
         """
         This function is used by self.autonome_move(). Given a set of
         particles, determine what the best directions are in order to
@@ -418,17 +420,13 @@ class Robot1(Robot):
         Inputs:
             state: A tuple describing the state. See 
                 self.autonome_move() for a full explanation.
+            measurements: A list with the measurements of the root
+                particles from self.autonome_move().
         Output:
             A list of new state similar to the input.
         """
         
-        '''angles = [
-            0,
-            math.pi/6, -math.pi/6,
-            math.pi/3, -math.pi/3,
-            3*math.pi/4, -3*math.pi/4
-        ]'''
-        angles = [i/5 * 2*math.pi for i in range(5)]
+        angles = [i/5 * math.pi for i in range(-2, 3)]
         fav = {}
         particles = state[2]
         new_states = []
@@ -438,7 +436,7 @@ class Robot1(Robot):
             u = (angle, 1)
             new_particles = []
             
-            # Calculate the next pose for all particles, and measure at
+            '''# Calculate the next pose for all particles, and measure at
             # the same time.
             measurements = {}
             for p in particles:
@@ -461,12 +459,29 @@ class Robot1(Robot):
             for dists in measurements.values():
                 dists += [0 for i in range(len(particles) - len(dists))]
                 av = sum(dists) / len(particles)
-                factor += sum([(d - av)**2 for d in dists]) / len(measurements)
+                factor += sum([(d - av)**2 for d in dists]) / len(measurements)'''
+            
+            # Calculate the next pose for all particles. Measure at the
+            # new pose and calculate the difference of this measurement
+            # with the measurement of the corresponding root particle.
+            # A higher difference is better.
+            factor = 0
+            for i in range(len(particles)):
+                _, new_part = self.motion_model(u, particles[i], exact=True)
+                new_part = (new_part[0] - angle, new_part[1])
+                new_particles.append(new_part)
+                measurement = self.measure(state=new_part, exact=True)
+                
+                avg_diff = 0
+                for m in range(2*self.half_measures):
+                    avg_diff += abs(measurements[i][m][1] - measurement[m][1])
+                avg_diff /= 2*self.half_measures
+                factor += avg_diff / len(particles)
             
             # Add a state to the list of new states.
             new_states.append((
                 state[0]+[angle],
-                state[1]+100/factor,
+                state[1]+factor,
                 new_particles
             ))
         
@@ -525,6 +540,46 @@ class Robot2(Robot):
             new_weight = 0
         
         return 0.1*old_weight + 0.9*new_weight
+    
+    def autonome_move(self):
+        """
+        Find out an optimal direction to move in, and perform the move.
+        Output:
+            True if the particles approximate the robot pose good
+            enough.
+        """
+        
+        # Only use the 20% of the particles with the highest weight.
+        particles = sorted(self.particles, key=lambda p: p[1])
+        particles = [p[0] for p in particles[:self.num_particles//5]]
+        
+        # Create a root state with empty angles list and usability
+        # factor 0. States always contain
+        #   - A list with previously found angles.
+        #   - The usability factor of the state.
+        #   - A list of particles that must be used to find the best
+        #     directions. Particles are of the form (angle, (x, y)).
+        states = [([], 0, particles)]
+        depth = 5
+        
+        # Go depth steps deep to find the best direction under which to
+        # move the robot.
+        for i in range(depth):
+            # Only preserve the 3 best states to speed up calculations.
+            states = states[:3]
+            new_states = []
+            
+            # Calculate all the children states for the preserved
+            # states and add them to a new list of states. Sort the list
+            # based on the usability factor.
+            for state in states:
+                new_states.extend(self.new_states(state))
+            states = sorted(new_states, key=lambda s: s[1])
+        
+        # Take the best angle (the one with the highest factor) from the
+        # list and perform the actual move.
+        angle = states[0][0][0]
+        return self.move(angle, 1)
     
     def new_states(self, state):
         """
