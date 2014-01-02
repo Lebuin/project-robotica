@@ -93,8 +93,7 @@ walls = [10, 7, 15]
 particles = [100, 50, 70, 140, 190]
 iterations = 30
 
-data_path = 'part1_data/'
-draw_path = 'part1_draw/'
+data_path = 'data/'
 
 test = {
     'base_case': False,

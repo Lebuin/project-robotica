@@ -40,13 +40,13 @@ def test_case(name, iterations, map_size, resolution, num_areas, num_colours, nu
         
         # Move the robots until they have found their own location.
         time1a = 0
-        time1b = 0
-        time2a = 0
-        time2b = 0
+        time1b = 1
+        time2a = 1
+        time2b = 1
         j = 0
         
         while not (time1a and time1b and time2a and time2b):
-            #r1a.draw().save('test_move/r1a/'+str(j)+'.png')
+            r1a.draw().save('test_move/r1a/'+str(j)+'.png')
             #r1b.draw().save('test_move/r1b/'+str(j)+'.png')
             #r2a.draw().save('test_move/r2a/'+str(j)+'.png')
             #r2b.draw().save('test_move/r2b/'+str(j)+'.png')
@@ -100,9 +100,12 @@ def test_case(name, iterations, map_size, resolution, num_areas, num_colours, nu
 
 def output_data(path, data):
     f = open(path, 'w')
-    f.write('time1,time2\n')
+    f.write('R1,R1 (autonome),R2,R2 (autonome)\n')
     for d in data:
-        f.write(str(d[0])+','+str(d[1])+'\n')
+        line = ''
+        for time in d:
+            line += str(time)+','
+        f.write(line[:-1]+'\n')
     f.close()
 
 # Test parameters
@@ -114,7 +117,7 @@ colours = 10
 walls = 10
 
 particles = 100
-iterations = 30
+iterations = 1
 
 data = test_case('part2', iterations, size, resolution, areas, colours, walls, particles)
-output_data('part2_data/part2', data)
+output_data('data/part2', data)

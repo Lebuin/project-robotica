@@ -24,8 +24,9 @@ class Robot:
         
         self.alp_slow = 0.1
         self.alp_fast = 0.8
-        self.w_slow = 1
-        self.w_fast = 1
+        self.w_slow = 0.1
+        self.w_fast = 0.1
+        self.w_random = 0
         
         self.alp_dist = 0.3
         self.w_dist = 10
@@ -172,8 +173,9 @@ class Robot:
         
         # Add num_particles new particles to the list, according to the
         # cumulative distribution stored in temp[i][1].
+        
         for i in range(self.num_particles):
-            if random.random() < (1 - self.w_fast/self.w_slow/self.w_divider):
+            if random.random() < self.w_random:
                 rand_particles.append((self.random_particle(), 0))
             else:
                 selector = random.random() * total_weight
@@ -233,7 +235,6 @@ class Robot1(Robot):
     min_range = -10   # The minimal and
     max_range = 10  # maximal measuring distance.
     hit_sigma = 0.3 # See Thrun p. 172.
-    w_divider = 1.5
     
     measurement = []
     
@@ -252,8 +253,13 @@ class Robot1(Robot):
         for p in particles:
             w_avg += p[2]**(1/len(self.measurement)) / len(particles)
         
+        w_avg = max([p[2]**(1/len(self.measurement)) for p in particles])
+        
         self.w_slow += self.alp_slow * (w_avg - self.w_slow)
         self.w_fast += self.alp_fast * (w_avg - self.w_fast)
+        self.w_random = 1 - 1.5*self.w_fast
+        print()
+        print((w_avg, self.w_fast, self.w_slow, self.w_random))
     
     def measure(self, state=None, exact=False):
         """
@@ -463,7 +469,6 @@ class Robot1(Robot):
 class Robot2(Robot):
     
     measurement = 0
-    w_divider = 1
     
     def set_weights(self, particles):
         """
@@ -479,6 +484,9 @@ class Robot2(Robot):
         
         self.w_slow += self.alp_slow * (w_avg - self.w_slow)
         self.w_fast += self.alp_fast * (w_avg - self.w_fast)
+        self.w_random = 1 - self.w_fast/self.w_slow
+        #print()
+        #print((w_avg, self.w_fast, self.w_slow, 1 - self.w_fast - self.w_slow))
     
     def measure(self, state=None):
         """
