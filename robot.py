@@ -191,10 +191,7 @@ class Robot:
         self.w_dist += self.alp_dist * (self.particles_distance() - self.w_dist)
         self.particles.extend(rand_particles)
         
-        if self.w_dist < 0.5:
-            return True
-        else:
-            return False
+        return self.w_dist < 0.5
     
     def particles_distance(self):
         """
@@ -202,7 +199,7 @@ class Robot:
         particles to the actual robot position.
         """
         
-        avg_num = self.num_particles//5
+        avg_num = len(self.particles)//3
         distances = [geom.dist_points(self.coor, p[0][1]) for p in self.particles]
         return sum(sorted(distances)[:avg_num])/avg_num
     
@@ -247,19 +244,11 @@ class Robot1(Robot):
                 (coordinate, cumulative weight, weight).
         """
         
-        #w_avg = 0
-        #power = 1/(len(particles)*len(self.measurement))
-        #total_weight = particles[-1][1]
-        #for p in particles:
-        #    w_avg += p[2]**(1/len(self.measurement)) / len(particles)
-        
         w_max = max([p[2]**(1/len(self.measurement)) for p in particles])
         
         self.w_slow += self.alp_slow * (w_max - self.w_slow)
         self.w_fast += self.alp_fast * (w_max - self.w_fast)
         self.w_random = 1 - 2*self.w_fast
-        print()
-        print((w_max, self.w_fast, self.w_slow, self.w_random))
     
     def measure(self, state=None, exact=False):
         """
@@ -480,15 +469,11 @@ class Robot2(Robot):
                 (coordinate, cumulative weight, weight).
         """
         
-        #w_avg = 0
         w_avg = sum([p[2] for p in particles]) / self.num_particles
         
         self.w_slow += self.alp_slow * (w_avg - self.w_slow)
         self.w_fast += self.alp_fast * (w_avg - self.w_fast)
-        #self.w_random = 1 - self.w_fast/self.w_slow
         self.w_random = 1 - 4*self.w_fast
-        #print()
-        #print((w_avg, self.w_fast, self.w_slow, self.w_random))
     
     def measure(self, state=None):
         """

@@ -48,27 +48,14 @@ def test_case(name, iterations, map_size, resolution, num_areas, num_colours, nu
         while not (time1a and time1b and time2a and time2b):
             #r1a.draw().save('test_move/r1a/'+str(j)+'.png')
             #r1b.draw().save('test_move/r1b/'+str(j)+'.png')
-            #r2a.draw().save('test_move/r2a/'+str(j)+'.png')
+            r2a.draw().save('test_move/r2a/'+str(j)+'.png')
             #r2b.draw().save('test_move/r2b/'+str(j)+'.png')
             
             j += 1
             
             # Move the random robots:
             if time1a == 0 or time2a == 0:
-                
-                # Choose the robot that wil be used to find a good control.
-                #if time1a == 0:
-                #    r = r1a
-                #else:
-                #    r = r2a
-                
-                # Find a control so that the robots won't hit a wall.
-                #intersect = True
-                #while intersect:
-                #    ang = random.gauss(0, 0.5)
-                #    dist = 1
-                #    intersect, dest = r.motion_model((ang, dist))
-                ang = (2*random.random() - 1) * math.pi
+                ang = random.gauss(0, math.pi/3)
                 dist = 1
                 
                 if time1a == 0 and r1a.move(ang, dist):

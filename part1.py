@@ -96,21 +96,12 @@ iterations = 30
 data_path = 'data/'
 
 test = {
-    'base_case': False,
+    'base_case': True,
     'map_size': False,
     'num_areas': False,
-    'num_colours': True,
+    'num_colours': False,
     'num_walls': False,
-    'num_particles': True
-}
-
-draw = {
-    'base_case': True,
-    'map_size': True,
-    'num_areas': True,
-    'num_colours': True,
-    'num_walls': True,
-    'num_particles': True
+    'num_particles': False
 }
 
 # Test the base case.
