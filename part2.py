@@ -46,10 +46,10 @@ def test_case(name, iterations, map_size, resolution, num_areas, num_colours, nu
         j = 0
         
         while not (time1a and time1b and time2a and time2b):
-            r1a.draw().save('test_move/r1a/'+str(j)+'.png')
-            r1b.draw().save('test_move/r1b/'+str(j)+'.png')
-            r2a.draw().save('test_move/r2a/'+str(j)+'.png')
-            r2b.draw().save('test_move/r2b/'+str(j)+'.png')
+            #r1a.draw().save('test_move/r1a/'+str(j)+'.png')
+            #r1b.draw().save('test_move/r1b/'+str(j)+'.png')
+            #r2a.draw().save('test_move/r2a/'+str(j)+'.png')
+            #r2b.draw().save('test_move/r2b/'+str(j)+'.png')
             
             j += 1
             
