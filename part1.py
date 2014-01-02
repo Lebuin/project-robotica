@@ -57,9 +57,12 @@ def test_case(name, iterations, map_size, resolution, num_areas, num_colours, nu
             dist = geom.dist_points(r.coor, dest[1])
             ang = dest[0] - r.ang
             
-            if time1 == 0 and r1.move(ang, dist, exact=True):
+            ang = random.gauss(0, math.pi/3)
+            dist = 1
+            
+            if time1 == 0 and r1.move(ang, dist):
                 time1 = j
-            if time2 == 0 and r2.move(ang, dist, exact=True):
+            if time2 == 0 and r2.move(ang, dist):
                 time2 = j
             
             print(

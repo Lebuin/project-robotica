@@ -102,6 +102,11 @@ class Robot:
             ang += random.gauss(u[0], self.a_sigma)
             dist = random.gauss(u[1], u[1] * self.d_sigma)
         
+        while ang > 2*math.pi:
+            ang -= 2*math.pi
+        while ang < -2*math.pi:
+            ang += 2*math.pi
+        
         # Calculate a step size of at most 0.1, so that the destination
         # will be exactly reached.
         steps = int(math.ceil(dist / 0.1))
@@ -191,7 +196,7 @@ class Robot:
         self.w_dist += self.alp_dist * (self.particles_distance() - self.w_dist)
         self.particles.extend(rand_particles)
         
-        return self.w_dist < 0.5
+        return self.w_dist < 1
     
     def particles_distance(self):
         """
@@ -200,7 +205,12 @@ class Robot:
         """
         
         avg_num = len(self.particles)//3
-        distances = [geom.dist_points(self.coor, p[0][1]) for p in self.particles]
+        distances = []
+        for p in self.particles:
+            distance = geom.dist_points(self.coor, p[0][1])
+            ang_dist = abs(self.ang - p[0][0]) / 0.2
+            distances.append(distance + ang_dist)
+        #distances = [geom.dist_points(self.coor, p[0][1]) for p in self.particles]
         return sum(sorted(distances)[:avg_num])/avg_num
     
     def print(self):
