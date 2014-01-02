@@ -97,11 +97,11 @@ data_path = 'part1_data/'
 draw_path = 'part1_draw/'
 
 test = {
-    'base_case': True,
-    'map_size': True,
-    'num_areas': True,
+    'base_case': False,
+    'map_size': False,
+    'num_areas': False,
     'num_colours': True,
-    'num_walls': True,
+    'num_walls': False,
     'num_particles': True
 }
 
@@ -156,6 +156,6 @@ if test[name]:
 name = 'num_particles'
 if test[name]:
     for i in range(1, len(walls)):
-        n = name+str(walls[i])
+        n = name+str(particles[i])
         data = test_case(n, iterations, size[0], resolution, areas[0], colours[0], walls[0], particles[i])
         output_data(data_path+n, data)
