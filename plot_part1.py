@@ -23,7 +23,7 @@ values = {
     'num_particles': [100, 50, 70, 140, 190]
 }
 
-folder = 'part1_data/'
+folder = 'data/'
 names = ['R1', 'R2']
 colors = ['b', 'r']
 plot_number = 1
