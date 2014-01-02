@@ -23,7 +23,7 @@ class Robot:
         self.coor = (0, 0)
         
         self.alp_slow = 0.1
-        self.alp_fast = 0.8
+        self.alp_fast = 0.5
         self.w_slow = 0.1
         self.w_fast = 0.1
         self.w_random = 0
@@ -258,8 +258,8 @@ class Robot1(Robot):
         self.w_slow += self.alp_slow * (w_avg - self.w_slow)
         self.w_fast += self.alp_fast * (w_avg - self.w_fast)
         self.w_random = 1 - 1.5*self.w_fast
-        print()
-        print((w_avg, self.w_fast, self.w_slow, self.w_random))
+        #print()
+        #print((w_avg, self.w_fast, self.w_slow, self.w_random))
     
     def measure(self, state=None, exact=False):
         """
@@ -485,8 +485,9 @@ class Robot2(Robot):
         self.w_slow += self.alp_slow * (w_avg - self.w_slow)
         self.w_fast += self.alp_fast * (w_avg - self.w_fast)
         self.w_random = 1 - self.w_fast/self.w_slow
-        #print()
-        #print((w_avg, self.w_fast, self.w_slow, 1 - self.w_fast - self.w_slow))
+        self.w_random = 1 - 4*self.w_fast
+        print()
+        print((w_avg, self.w_fast, self.w_slow, self.w_random))
     
     def measure(self, state=None):
         """
