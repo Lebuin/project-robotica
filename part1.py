@@ -97,12 +97,12 @@ data_path = 'part1_data/'
 draw_path = 'part1_draw/'
 
 test = {
-    'base_case': False,
-    'map_size': False,
-    'num_areas': False,
-    'num_colours': False,
-    'num_walls': False,
-    'num_particles': False
+    'base_case': True,
+    'map_size': True,
+    'num_areas': True,
+    'num_colours': True,
+    'num_walls': True,
+    'num_particles': True
 }
 
 draw = {

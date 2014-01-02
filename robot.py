@@ -295,8 +295,8 @@ class Robot1(Robot):
             )
             
             # Loop through all the walls, and see if the beam hits them.
-            # We will do this in both positive and negative direction,
-            # so at the end of the loop we have the distances to the
+            # Do this in both positive and negative direction, so that
+            # at the end of the loop we have the distances to the
             # closest wall on either side of the robot.
             pos_dist = self.max_range
             neg_dist = -self.max_range
