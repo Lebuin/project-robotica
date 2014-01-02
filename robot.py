@@ -247,19 +247,19 @@ class Robot1(Robot):
                 (coordinate, cumulative weight, weight).
         """
         
-        w_avg = 0
-        power = 1/(len(particles)*len(self.measurement))
-        total_weight = particles[-1][1]
-        for p in particles:
-            w_avg += p[2]**(1/len(self.measurement)) / len(particles)
+        #w_avg = 0
+        #power = 1/(len(particles)*len(self.measurement))
+        #total_weight = particles[-1][1]
+        #for p in particles:
+        #    w_avg += p[2]**(1/len(self.measurement)) / len(particles)
         
-        w_avg = max([p[2]**(1/len(self.measurement)) for p in particles])
+        w_max = max([p[2]**(1/len(self.measurement)) for p in particles])
         
-        self.w_slow += self.alp_slow * (w_avg - self.w_slow)
-        self.w_fast += self.alp_fast * (w_avg - self.w_fast)
-        self.w_random = 1 - 1.5*self.w_fast
-        #print()
-        #print((w_avg, self.w_fast, self.w_slow, self.w_random))
+        self.w_slow += self.alp_slow * (w_max - self.w_slow)
+        self.w_fast += self.alp_fast * (w_max - self.w_fast)
+        self.w_random = 1 - 2*self.w_fast
+        print()
+        print((w_max, self.w_fast, self.w_slow, self.w_random))
     
     def measure(self, state=None, exact=False):
         """
@@ -394,13 +394,13 @@ class Robot1(Robot):
         #   - A list of particles that must be used to find the best
         #     directions. Particles are of the form (angle, (x, y)).
         states = [([], 0, particles)]
-        depth = 3
+        depth = 5
         
         # Go depth steps deep to find the best direction under which to
         # move the robot.
         for i in range(depth):
             # Only preserve the 3 best states to speed up calculations.
-            states = states[:3]
+            states = states[:2]
             new_states = []
             
             # Calculate all the children states for the preserved
@@ -452,7 +452,8 @@ class Robot1(Robot):
                 
                 avg_diff = 0
                 for m in range(2*self.half_measures):
-                    avg_diff += abs(measurements[i][m][1] - measurement[m][1])
+                    meas = measurements[i][m][1]
+                    avg_diff += abs(meas - measurement[m][1])
                 avg_diff /= 2*self.half_measures
                 factor += avg_diff / len(particles)
             
@@ -479,15 +480,15 @@ class Robot2(Robot):
                 (coordinate, cumulative weight, weight).
         """
         
-        w_avg = 0
+        #w_avg = 0
         w_avg = sum([p[2] for p in particles]) / self.num_particles
         
         self.w_slow += self.alp_slow * (w_avg - self.w_slow)
         self.w_fast += self.alp_fast * (w_avg - self.w_fast)
-        self.w_random = 1 - self.w_fast/self.w_slow
+        #self.w_random = 1 - self.w_fast/self.w_slow
         self.w_random = 1 - 4*self.w_fast
-        print()
-        print((w_avg, self.w_fast, self.w_slow, self.w_random))
+        #print()
+        #print((w_avg, self.w_fast, self.w_slow, self.w_random))
     
     def measure(self, state=None):
         """

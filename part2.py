@@ -57,24 +57,23 @@ def test_case(name, iterations, map_size, resolution, num_areas, num_colours, nu
             if time1a == 0 or time2a == 0:
                 
                 # Choose the robot that wil be used to find a good control.
-                if time1a == 0:
-                    r = r1a
-                else:
-                    r = r2a
+                #if time1a == 0:
+                #    r = r1a
+                #else:
+                #    r = r2a
                 
                 # Find a control so that the robots won't hit a wall.
-                intersect = True
-                while intersect:
-                    ang = random.gauss(0, 0.5)
-                    dist = 1
-                    intersect, dest = r.motion_model((ang, dist))
+                #intersect = True
+                #while intersect:
+                #    ang = random.gauss(0, 0.5)
+                #    dist = 1
+                #    intersect, dest = r.motion_model((ang, dist))
+                ang = (2*random.random() - 1) * math.pi
+                dist = 1
                 
-                dist = geom.dist_points(r.coor, dest[1])
-                ang = dest[0] - r.ang
-                
-                if time1a == 0 and r1a.move(ang, dist, exact=True):
+                if time1a == 0 and r1a.move(ang, dist):
                     time1a = j
-                if time2a == 0 and r2a.move(ang, dist, exact=True):
+                if time2a == 0 and r2a.move(ang, dist):
                     time2a = j
             
             # Move the self controlled robots.
