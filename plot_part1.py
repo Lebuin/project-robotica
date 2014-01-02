@@ -12,20 +12,22 @@ def get_data(path):
     for line in f:
         data.append(string_to_list(line))
     data = list(zip(*data))
-    means = [sum(sorted(d)[:-3]) / (len(d)-3) for d in data]
+    #means = [sum(sorted(d)[:-3]) / (len(d)-3) for d in data]
+    means = [sum(d) / len(d) for d in data]
     return data, means
 
 values = {
     'map_size': [20, 15, 25, 30],
-    'num_areas': [100, 70, 130, 160, 200],
-    'num_colours': [10, 7, 15],
+    'num_areas': [100, 70, 150],
+    'num_colours': [8, 5, 12],
     'num_walls': [10, 7, 15],
-    'num_particles': [100, 50, 70, 140, 190]
+    'num_particles': [100, 70, 140, 200]
 }
 names = ['map_size', 'num_areas', 'num_colours', 'num_walls', 'num_particles']
+names = ['map_size', 'num_particles']
 
 folder = 'data/'
-names = ['R1', 'R2']
+legends = ['R1', 'R2']
 colors = ['b', 'r']
 plot_number = 1
 
@@ -38,7 +40,7 @@ for i in range(len(data)):
         data[i],
         '.',
         color=colors[i],
-        label=names[i]
+        label=legends[i]
     )
     plt.plot(
         i+1,
@@ -80,7 +82,7 @@ for name in names:
             color=colors[i],
             marker='+'
         )
-    plt.ylim((0, 200))
+    #plt.ylim((0, 200))
     plt.title(name)
 
 plt.show()

@@ -41,35 +41,30 @@ def test_case(name, iterations, map_size, resolution, num_areas, num_colours, nu
         while not (time1 and time2):
             j += 1
             
-            # Choose the robot that wil be used to find a good control.
-            if time1 == 0:
-                r = r1
-            else:
-                r = r2
-            
             # Find a control so that the robots won't hit a wall.
-            intersect = True
-            while intersect:
-                ang = random.gauss(0, 0.5)
-                dist = 1
-                intersect, dest = r.motion_model((ang, dist))
+            if time1 == 0:
+                intersect = True
+                while intersect:
+                    ang = random.random() * 2*math.pi
+                    dist = 1
+                    intersect, dest = r1.motion_model((ang, dist))
+                if r1.move(ang, dist):
+                    time1 = j
             
-            dist = geom.dist_points(r.coor, dest[1])
-            ang = dest[0] - r.ang
-            
-            ang = random.gauss(0, math.pi/3)
-            dist = 1
-            
-            if time1 == 0 and r1.move(ang, dist):
-                time1 = j
-            if time2 == 0 and r2.move(ang, dist):
-                time2 = j
+            if time2 == 0:
+                intersect = True
+                while intersect:
+                    ang = random.random() * 2*math.pi
+                    dist = 1
+                    intersect, dest = r2.motion_model((ang, dist))
+                if r2.move(ang, dist):
+                    time2 = j
             
             print(
                 '\r"'+name+'" iteration '+str(i)+
                 ', time '+str(j)+
-                ', time1: '+str(time1)+
-                ', time2: '+str(time2),
+                ', R1: '+str(time1)+
+                ', R2: '+str(time2),
                 end=''
             )
         
@@ -80,7 +75,7 @@ def test_case(name, iterations, map_size, resolution, num_areas, num_colours, nu
 
 def output_data(path, data):
     f = open(path, 'w')
-    f.write('time1,time2\n')
+    f.write('R1,R2\n')
     for d in data:
         f.write(str(d[0])+','+str(d[1])+'\n')
     f.close()
@@ -89,22 +84,22 @@ def output_data(path, data):
 size = [20, 15, 25, 30]
 resolution = 0.1
 
-areas = [100, 70, 130, 160, 200]
-colours = [10, 7, 15]
+areas = [100, 70, 150]
+colours = [8, 5, 12]
 walls = [10, 7, 15]
 
-particles = [100, 50, 70, 140, 190]
+particles = [100, 70, 140, 200]
 iterations = 30
 
 data_path = 'data/'
 
 test = {
-    'base_case': True,
+    'base_case': False,
     'map_size': False,
     'num_areas': False,
     'num_colours': False,
     'num_walls': False,
-    'num_particles': False
+    'num_particles': True
 }
 
 # Test the base case.
@@ -148,7 +143,7 @@ if test[name]:
 # Variable number of particles.
 name = 'num_particles'
 if test[name]:
-    for i in range(1, len(walls)):
+    for i in range(1, len(particles)):
         n = name+str(particles[i])
         data = test_case(n, iterations, size[0], resolution, areas[0], colours[0], walls[0], particles[i])
         output_data(data_path+n, data)

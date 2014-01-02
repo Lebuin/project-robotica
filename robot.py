@@ -196,7 +196,7 @@ class Robot:
         self.w_dist += self.alp_dist * (self.particles_distance() - self.w_dist)
         self.particles.extend(rand_particles)
         
-        return self.w_dist < 1
+        return self.w_dist < 0.5
     
     def particles_distance(self):
         """
@@ -206,11 +206,7 @@ class Robot:
         
         avg_num = len(self.particles)//3
         distances = []
-        for p in self.particles:
-            distance = geom.dist_points(self.coor, p[0][1])
-            ang_dist = abs(self.ang - p[0][0]) / 0.2
-            distances.append(distance + ang_dist)
-        #distances = [geom.dist_points(self.coor, p[0][1]) for p in self.particles]
+        distances = [geom.dist_points(self.coor, p[0][1]) for p in self.particles]
         return sum(sorted(distances)[:avg_num])/avg_num
     
     def print(self):
@@ -243,7 +239,11 @@ class Robot1(Robot):
     max_range = 10  # maximal measuring distance.
     hit_sigma = 0.3 # See Thrun p. 172.
     
-    measurement = []
+    #measurement = []
+    
+    def __init(self, mapp, num_particles):
+        self.measurement = []
+        super(Robot, self).__init__(mapp, num_particles)
     
     def set_weights(self, particles):
         """
