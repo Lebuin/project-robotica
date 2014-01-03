@@ -40,17 +40,18 @@ def test_case(name, iterations, map_size, resolution, num_areas, num_colours, nu
         r2b.put(ang, (x, y))
         
         # Move the robots until they have found their own location.
-        time1a = 0
+        time1a = 1
         time1b = 1
         time2a = 1
-        time2b = 1
+        time2b = 0
         j = 0
         
-        while not (time1a and time1b and time2a and time2b):
-            r1a.draw().save('test_move/r1a/'+str(j)+'.png')
+        #while not (time1a and time1b and time2a and time2b):
+        while time2b < 10:
+            #r1a.draw().save('test_move/r1a/'+str(j)+'.png')
             #r1b.draw().save('test_move/r1b/'+str(j)+'.png')
             #r2a.draw().save('test_move/r2a/'+str(j)+'.png')
-            #r2b.draw().save('test_move/r2b/'+str(j)+'.png')
+            r2b.draw().save('test_move/r2b/'+str(j)+'.png')
             
             j += 1
             
@@ -71,8 +72,8 @@ def test_case(name, iterations, map_size, resolution, num_areas, num_colours, nu
             if time1b == 0 and r1b.autonome_move():
                 time1b = j
             
-            if time2b == 0 and r2b.autonome_move():
-                time2b = j
+            if time2b < 10 and r2b.autonome_move():
+                time2b += 1
             
             print(
                 '\r"'+name+'" iteration '+str(i)+
