@@ -41,42 +41,46 @@ def test_case(name, iterations, map_size, resolution, num_areas, num_colours, nu
         
         # Move the robots until they have found their own location.
         time1a = 0
-        time1b = 0
+        time1b = 1
         time2a = 1
         time2b = 1
         j = 0
         
         while not (time1a and time1b and time2a and time2b):
             r1a.draw().save('test_move/r1a/'+str(j)+'.png')
-            r1b.draw().save('test_move/r1b/'+str(j)+'.png')
+            #r1b.draw().save('test_move/r1b/'+str(j)+'.png')
             #r2a.draw().save('test_move/r2a/'+str(j)+'.png')
             #r2b.draw().save('test_move/r2b/'+str(j)+'.png')
             
             j += 1
             
             # Move the random robots:
-            if time1a == 0 or time2a == 0:
+            if time1a == 0:
                 ang = random.gauss(0, math.pi/3)
                 dist = 1
-                
-                if time1a == 0 and r1a.move(ang, dist):
+                if r1a.move(ang, dist):
                     time1a = j
-                if time2a == 0 and r2a.move(ang, dist):
+            
+            if time2a == 0:
+                ang = random.gauss(0, math.pi/3)
+                dist = 1
+                if r2a.move(ang, dist):
                     time2a = j
             
             # Move the self controlled robots.
             if time1b == 0 and r1b.autonome_move():
                 time1b = j
+            
             if time2b == 0 and r2b.autonome_move():
                 time2b = j
             
             print(
                 '\r"'+name+'" iteration '+str(i)+
                 ', time '+str(j)+
-                ', time1a: '+str(time1a)+
-                ', time1b: '+str(time1b)+
-                ', time2a: '+str(time2a)+
-                ', time2b: '+str(time2b),
+                ', R1a: '+str(time1a)+
+                ', R1b: '+str(time1b)+
+                ', R2a: '+str(time2a)+
+                ', R2b: '+str(time2b),
                 end=''
             )
         

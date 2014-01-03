@@ -97,9 +97,9 @@ test = {
     'base_case': False,
     'map_size': False,
     'num_areas': False,
-    'num_colours': False,
-    'num_walls': False,
-    'num_particles': True
+    'num_colours': True,
+    'num_walls': True,
+    'num_particles': False
 }
 
 # Test the base case.

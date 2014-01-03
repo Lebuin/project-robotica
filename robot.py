@@ -239,8 +239,6 @@ class Robot1(Robot):
     max_range = 10  # maximal measuring distance.
     hit_sigma = 0.3 # See Thrun p. 172.
     
-    #measurement = []
-    
     def __init(self, mapp, num_particles):
         self.measurement = []
         super(Robot, self).__init__(mapp, num_particles)
@@ -468,7 +466,9 @@ class Robot1(Robot):
 
 class Robot2(Robot):
     
-    measurement = 0
+    def __init(self, mapp, num_particles):
+        self.measurement = 0
+        super(Robot, self).__init__(mapp, num_particles)
     
     def set_weights(self, particles):
         """

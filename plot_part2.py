@@ -12,7 +12,8 @@ def get_data(path):
     for line in f:
         data.append(string_to_list(line))
     data = list(zip(*data))
-    means = [sum(sorted(d)[:-0]) / (len(d)-0) for d in data]
+    subtract = 3
+    means = [sum(sorted(d)[:len(d)-subtract]) / (len(d)-subtract) for d in data]
     return data, means
 
 folder = 'data/'

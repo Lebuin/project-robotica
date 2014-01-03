@@ -12,8 +12,8 @@ def get_data(path):
     for line in f:
         data.append(string_to_list(line))
     data = list(zip(*data))
-    #means = [sum(sorted(d)[:-3]) / (len(d)-3) for d in data]
-    means = [sum(d) / len(d) for d in data]
+    subtract = 3
+    means = [sum(sorted(d)[:len(d)-subtract]) / (len(d)-subtract) for d in data]
     return data, means
 
 values = {
@@ -24,7 +24,7 @@ values = {
     'num_particles': [100, 70, 140, 200]
 }
 names = ['map_size', 'num_areas', 'num_colours', 'num_walls', 'num_particles']
-names = ['map_size', 'num_particles']
+names = ['map_size', 'num_areas', 'num_colours', 'num_walls', 'num_particles']
 
 folder = 'data/'
 legends = ['R1', 'R2']
@@ -33,7 +33,6 @@ plot_number = 1
 
 plt.subplot(2, 3, plot_number)
 data, base_means = get_data(folder+'base_case')
-print(base_means)
 for i in range(len(data)):
     plt.plot(
         [i+1 for k in range(len(data[i]))],
@@ -82,7 +81,7 @@ for name in names:
             color=colors[i],
             marker='+'
         )
-    #plt.ylim((0, 200))
+    plt.ylim((0, 200))
     plt.title(name)
 
 plt.show()
